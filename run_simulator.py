@@ -10,15 +10,13 @@ from simulation import Simulator
 COUNT_ROOMS = 4
 
 
-def make_step(model, env, state, start_time):
-    actual_time = pygame.time.get_ticks()
-    time = actual_time - start_time
+def make_step(model, env, state):
     if ai['RUN_MODE'] == AppMode.COMPARE:
         actions = [model.choose_action(state) for _ in range(COUNT_ROOMS)]
     else:  # if ai['RUN_MODE'] == AppMode.RUN:
-        actions = [Agent.choose_action(state, model, True)[0] for _ in range(COUNT_ROOMS)]
+        actions = [Agent.choose_action(state[i], model, True)[0] for i in range(COUNT_ROOMS)]
 
-    state, _, _ = env.step(actions, 0)
+    state, _ = env.step(actions, 1)  # 1 - one minute
     return state
 
 
@@ -26,7 +24,7 @@ def run_simulator():
     pygame.init()
     screen = pygame.display.set_mode((gui['SCREEN_WIDTH'], gui['SCREEN_HEIGHT']))
     pygame.display.set_caption(gui['WINDOW_TITLE'])
-    font = pygame.font.Font(None, 36)
+    font = pygame.font.Font(None, 24)
     start_time = pygame.time.get_ticks()
 
     # only for AI
@@ -35,7 +33,10 @@ def run_simulator():
     run_from_checkpoint = True
 
     # environment
-    env = Environment(COUNT_ROOMS)
+    rooms_desired_temps = [19, 20, 21, 22]
+    if len(rooms_desired_temps) != COUNT_ROOMS:
+        print('Room numbers do not match!!!!')
+    env = Environment(rooms_desired_temps)
     simulator = Simulator(screen, font)
 
     if ai['RUN_MODE'] == AppMode.COMPARE:
@@ -47,7 +48,7 @@ def run_simulator():
         if run_from_checkpoint:
             Agent.load_model(model)
 
-    simulator.run(start_time, model, env, callback=make_step)
+    simulator.run(model, env, callback=make_step)
 
 
 if __name__ == '__main__':

@@ -24,6 +24,7 @@ class TemperatureModel:
         calculate_outdoor_temperature: returns the outdoor temperature (float).
         calculate_indoor_temperature: returns the indoor temperature (float).
         calculate_heating_temperature: returns the floor temperature (float).
+        calculate_heating_temperature: numerical approximation for all temperatures based on given time.
     """
     min_switch_time = 10
     max_floor_temperature = 27.
@@ -44,7 +45,7 @@ class TemperatureModel:
         """
         self.outdoor_temperature = 0.
         self.indoor_temperature = 20.
-        self.heating_temperature = 27.
+        self.heating_temperature = 25.
         self.heating_source_temp = heating_source_temp
         self.sunrise_time = sunrise_time
         self.sub_minute_for_day = sub_minute_for_day
@@ -103,26 +104,49 @@ class TemperatureModel:
         )
 
     def calculate_temperatures(self, time: int):
+        """
+        Numerical approximation for all temperatures based on given time.
+        """
         self.calculate_indoor_temperature(time)
         self.calculate_heating_temperature()
 
         self.save_values_to_dict(time)
 
     def step(self, action: bool, time: int):
+        """
+        Numerical approximation for all temperatures based on given action and time.
+        """
         if self.heating_source_on is not action:
             self.switch_heating_source(time)
         self.calculate_temperatures(time)
-        return self.get_values()
 
     def save_values_to_dict(self, time: int):
+        """
+        Save data to dictionary to further use. (tables, plots, etc).
+        """
         self.data_dictionary.add_data(time, self.outdoor_temperature, self.indoor_temperature, self.heating_temperature, self.heating_source_on)
 
     def switch_heating_source(self, time: int):
         self.last_switch_time = time
         self.heating_source_on = not self.heating_source_on
 
-    def get_values(self):
-        pass
+    def get_in_values(self):
+        """
+        Get all indoor temperature values and heating source on/off status
+
+        Returns:
+            (tuple) of floats
+        """
+        return self.indoor_temperature, self.heating_temperature, self.heating_source_on
+
+    def get_out_values(self):
+        """
+        Get all outdoor temperature
+
+        Returns:
+            (tuple) of floats
+        """
+        return (self.outdoor_temperature,)
 
     # TODO  - for now I use simple Euler method
     def runge_kutta_step(self, Yn, k1):

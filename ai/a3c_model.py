@@ -17,9 +17,6 @@ class A3CModel(Model):
         self.action_size = action_size
         self.learning_rate = learning_rate
 
-        # Input Layer
-        self.input_layer = Input(shape=(self.state_size[0], self.state_size[1]))
-
         # GRU Layer
         self.gru = GRU(64, return_sequences=True, return_state=False)
         self.gru_out = GRU(32)
@@ -34,7 +31,9 @@ class A3CModel(Model):
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
 
     def call(self, inputs):
-        x = self.input_layer(inputs)
+        # Input Layer
+        x = inputs
+
         x = self.gru(x)
         x = self.gru_out(x)
         x = self.last_dense(x)

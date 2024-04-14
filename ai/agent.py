@@ -36,7 +36,7 @@ class Agent:
 
     @staticmethod
     def choose_action(state, model, play=False, epsilon=0.05):
-        state_tensor = tf.convert_to_tensor([state], dtype=tf.float32)
+        state_tensor = tf.convert_to_tensor([[state]], dtype=tf.float32)
 
         action_probs, value = model(state_tensor, training=False)
 
