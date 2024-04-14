@@ -19,16 +19,26 @@ Moduł ten, oparty na równaniach różniczkowych, symuluje dynamikę temperatur
 
 ### Równania różniczkowe modelu
 
-Równanie opisujące zmianę temperatury wewnętrznej T(t) w czasie:
+Równanie opisujące zmianę temperatury w pomieszczeniu w czasie jest zdefiniowane jako:
 
 $$
-\frac{dT}{dt} = h(t) - k \cdot (T(t) - T_{\text{out}}(t))
+\frac{dT}{dt} = \frac{1}{C} \left(\eta \cdot (H(t) - T(t)) - k \cdot A \cdot (T(t) - T_{\text{zew}}(t))\right) 
 $$
 
-gdzie:
-- \(h(t)\) reprezentuje wpływ ogrzewania (może być funkcją zależną od temperatury podłogi \(H(t)\)),
-- \(k\) to współczynnik przenikania ciepła przez ściany budynku,
-- \(T_{\text{out}}(t)\) to temperatura zewnętrzna.
+#### Legenda:
+
+- \( T(t) \): Temperatura wewnętrzna pomieszczenia w czasie \( t \) [°C].
+- \( H(t) \): Temperatura podłogi (czyli źródła ciepła) w czasie \( t \) [°C].
+- \( T_{\text{zew}}(t) \): Temperatura zewnętrzna w czasie \( t \) [°C].
+- \( \eta \): Współczynnik efektywności przenikania ciepła z podłogi do powietrza w pokoju [W/m²K].
+- \( k \): Współczynnik przenikania ciepła przez ściany budynku [W/m²K].
+- \( A \): Całkowita powierzchnia ścian zewnętrznych pomieszczenia [m²].
+- \( C \): Pojemność cieplna pomieszczenia, określająca ilość energii potrzebnej do podgrzania całego powietrza w pomieszczeniu o jeden stopień Celsjusza [J/K].
+
+#### Wyjaśnienie równania:
+
+Równanie to opisuje, jak szybko temperatura w pomieszczeniu zmienia się w odpowiedzi na działanie systemu ogrzewania podłogowego oraz wymianę ciepła z otoczeniem zewnętrznym. Współczynnik \( \eta \) mierzy, jak efektywnie ciepło jest przekazywane z podłogi do powietrza w pomieszczeniu, a współczynnik \( k \) odzwierciedla, jak szybko ciepło ucieka z pomieszczenia przez ściany zewnętrzne. Pojemność cieplna \( C \) mówi o tym, jak duża jest zdolność pomieszczenia do magazynowania ciepła.
+
 
 Równanie opisujące zmianę temperatury podłogi H(t) w czasie:
 
@@ -41,6 +51,7 @@ gdzie:
 - \(\alpha\) to współczynnik szybkości ogrzewania podłogi,
 - \(\beta\) to współczynnik szybkości chłodzenia podłogi,
 - \(T(t)\) to temperatura otoczenia wewnątrz budynku.
+
 
 
 ### Analiza Danych i Wizualizacja

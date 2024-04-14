@@ -15,17 +15,25 @@ The project consists of several key components:
 This module, based on differential equations, simulates the dynamics of temperature in the building. Data on temperatures and heating status are recorded in a table using Pandas, which allows for further analysis.
 
 ### Differential Equations of the Model
-Equation describing the change in internal temperature T(t) over time:
 
-```math
-\[ \frac{dT}{dt} = h(t) - k \cdot (T(t) - T_{\text{out}}(t)) \]
-```
+The equation describing the change in indoor temperature over time is defined as:
 
-where:
+\[ \frac{dT}{dt} = \frac{1}{C} \left(\eta \cdot (H(t) - T(t)) - k \cdot A \cdot (T(t) - T_{\text{ext}}(t))\right) \]
 
-- \(h(t)\) represents the heating impact (can be a function dependent on the floor temperature 
-- \(k\) is the coefficient of heat penetration through the building's walls,
-- \(T_{\text{out}}(t)\) is the outdoor temperature.
+### Legend:
+
+- \( T(t) \): Indoor temperature of the room at time \( t \) [°C].
+- \( H(t) \): Temperature of the floor (i.e., the heat source) at time \( t \) [°C].
+- \( T_{\text{ext}}(t) \): Outdoor temperature at time \( t \) [°C].
+- \( \eta \): Efficiency coefficient of heat transfer from the floor to the room air [W/m²K].
+- \( k \): Heat transfer coefficient through the building's walls [W/m²K].
+- \( A \): Total surface area of the room's exterior walls [m²].
+- \( C \): Thermal capacity of the room, indicating the amount of energy needed to warm up the entire room air by one degree Celsius [J/K].
+
+### Explanation of the Equation:
+
+This equation describes how quickly the temperature in the room changes in response to the operation of the floor heating system and the heat exchange with the external environment. The coefficient \( \eta \) measures how effectively heat is transferred from the floor to the room air, and the coefficient \( k \) reflects how quickly heat escapes from the room through the external walls. The thermal capacity \( C \) describing how much heat the room can store.
+
 Equation describing the change in floor temperature H(t) over time:
 
 ```math

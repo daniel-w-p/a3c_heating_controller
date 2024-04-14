@@ -12,7 +12,7 @@ class TemperatureModel:
         max_floor_temperature (float): constant.
         min_out_temperature (float): constant.
         max_out_temperature (float): constant.
-        thermal_coef (float): constant coefficient of thermal transmittance.
+        k_coef (float): constant coefficient of thermal transmittance.
         alpha (float): constant coefficient - floor heating rate factor.
         beta (float): constant coefficient - floor cooling rate factor.
         self.outdoor_temperature (float): approximated from sinus.
@@ -29,10 +29,13 @@ class TemperatureModel:
     min_switch_time = 10
     max_floor_temperature = 27.
     min_out_temperature = -10.
-    max_out_temperature = 5.
-    thermal_coef = 0.5
-    alpha = 0.0008 * 60  # because this for minute
-    beta = 0.0016 * 60  # because this for minute
+    min_max_temp_distance = 11.
+
+    alpha = 0.0006 * 60  # because this is for minute
+    beta = 0.0012 * 60  # because this is for minute
+    # room size: 4 * 4 * 2.6 # there are always two outside walls 2 * 4 * 2.6 = 20.8
+    k_coef = 20.8 * 0.5 / 50000  # TODO IMPROVE this should depend on the size of the room
+    mu_coef = 15 / 50000  # TODO IMPROVE this should depend on the size of the room
 
     def __init__(self, heating_source_temp=40., sunrise_time=460, sub_minute_for_day=True):
         """
@@ -60,29 +63,56 @@ class TemperatureModel:
         Args:
             time (int): time in minutes.
         """
+        # TODO later possible add support for the influence of cloud cover on temperature
         sunrise_time = self.sunrise_time
-        if self.sub_minute_for_day:  # TODO this could be done better (because in real it is not a minute per day)
-            sunrise_time -= time % 1440  # minutes per day
-        self.outdoor_temperature = (self.min_out_temperature +
-                                    (self.max_out_temperature - math.fabs(self.min_out_temperature)) * math.sin(
-                                        (2 * math.pi / 1440) * (time - sunrise_time)))
+        half_temp_diff = self.min_max_temp_distance / 2
+        day_time = 420
+        if self.sub_minute_for_day and sunrise_time - time // 1440 > 300 and day_time < 600:  # TODO this could be done better (because in real it is not 2 min. per day)
+            sunrise_time -= time // 720    # 2 minutes per day
+            day_time += time // 360         # if sunrise is one minute earlier and sunset is later that gives 2 min.
+        self.outdoor_temperature = (self.min_out_temperature + half_temp_diff + (day_time / 420) - 1 +
+                                    half_temp_diff * math.sin((2 * math.pi / 1440) * (time % 1440 - sunrise_time)))
+
+    def calculate_heating_effect(self, time: int):
+        """
+        Numerical approximation.
+        From equation: \n
+        h(t) = mu * (H(t) - T(t)) \n
+        where:
+        - mu is coefficient of heating rate factor.\n
+        - H(t) is the heating temperature.
+        - T(t) is the ambient temperature inside the building.
+
+        Args:
+            time (int): time in minutes.
+
+        Returns:
+            float: heating effect.
+        """
+        return self.mu_coef * (self.heating_temperature - self.indoor_temperature)
 
     def calculate_indoor_temperature(self, time: int):
         """
         Numerical approximation.
         From equation: \n
-        dT/dx = H(t) - k*(T(t) - To(t)) \n
+        dT/dx = h(t) - k*(T(t) - To(t)) \n
         where:
-        - H(t) is the heating temperature.
+        - h(t) function representing the effect of heating.
         - k is constant coefficient of thermal transmittance (building <-> outdoor).
-        - To(t) is outdoor temperature.
+        - To(t) is outdoor temperature.\n
+        h(t) = mu * (H(t) - T(t)) \n
+        where:
+        - mu is coefficient of heating rate factor.\n
+        - H(t) is the heating temperature.
+        - T(t) is the ambient temperature inside the building.
 
         Args:
             time (int): time in minutes.
         """
         self.calculate_outdoor_temperature(time)
+        h = self.calculate_heating_effect(time)
 
-        self.indoor_temperature += self.heating_temperature - self.thermal_coef * (
+        self.indoor_temperature += h - self.k_coef * (
                 self.indoor_temperature - self.outdoor_temperature)
 
     def calculate_heating_temperature(self):
