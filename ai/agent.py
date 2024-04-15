@@ -10,17 +10,14 @@ from main import Environment as Env
 
 
 class Agent:
-    EXP_COUNTER = 1200  # how many experiences (actions in environment)
+    EXP_COUNTER = 1440  # how many experiences (actions in environment) 1440 = day
     SAVE_DIR = './saves/'
     SAVE_FILE = 'a3c_model'
 
-    def __init__(self, env_state_shape, action_space):
-        self.env_state_shape = env_state_shape
-        self.action_space = action_space
-
-    @property
-    def shapes(self):
-        return self.env_state_shape, self.action_space
+    @staticmethod
+    def check_save_dir(save_dir=SAVE_DIR):
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
 
     @staticmethod
     def save_model(model, save_file=SAVE_DIR+SAVE_FILE):
@@ -35,75 +32,79 @@ class Agent:
             print("Weights file does not exist.")
 
     @staticmethod
-    def choose_action(state, model, play=False, epsilon=0.05):
-        state_tensor = tf.convert_to_tensor([[state]], dtype=tf.float32)
+    def choose_action(state, model, training=False, simulate=False, epsilon=0.1):
+        state_tensor = tf.convert_to_tensor([state], dtype=tf.float32)
 
-        action_probs, value = model(state_tensor, training=False)
+        action, value = model(state_tensor, training=training)
 
-        if play:
-            # action = tf.random.categorical(tf.math.log(action_probs), 1)[0, 0]
-            action = tf.argmax(action_probs, axis=-1)[0]
+        if simulate:
+            action = tf.where(action < 0.5, 0, 1)
         else:
-            if np.random.rand() < epsilon:
-                action = tf.random.uniform([1], minval=0, maxval=action_probs.shape[-1], dtype=tf.int64)[0]
-            else:
-                action = tf.random.categorical(tf.math.log(action_probs), 1)[0, 0]
-        return action.numpy(), value
+            random_value = tf.random.uniform([], minval=0, maxval=1, dtype=tf.float32)
+            random_choice = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32)  # choose 0 lub 1
+            action = tf.cond(
+                random_value < epsilon,
+                true_fn=lambda: random_choice,
+                false_fn=lambda: tf.cast(action[0, 0] < random_value, tf.int32)
+            )
+
+        return action.numpy(), value[0, 0].numpy()
 
     @staticmethod
-    def unpack_exp_and_step(model, experiences, action_space):
-        env_state, plr_state, actions, advantages, rewards = zip(*experiences)
+    def unpack_exp_and_step(model, experiences):
+        states, actions, advantages, rewards = zip(*experiences)
 
-        one_hot_action = tf.one_hot(actions, depth=action_space)
-        env_state = tf.convert_to_tensor(env_state, dtype=tf.float32)
-        plr_state = tf.convert_to_tensor(plr_state, dtype=tf.float32)
+        actions = np.array(actions)
+        advantages = np.array(advantages)
+        rewards = np.array(rewards)
+        states = np.array(states)
+
+        actions = actions.reshape(-1).astype(np.float32)
+        advantages = advantages.reshape(-1).astype(np.float32)
+        rewards = rewards.reshape(-1).astype(np.float32)
+
+        states = states.reshape(-1, states.shape[-2], states.shape[-1])
+
+        action = tf.convert_to_tensor(actions, dtype=tf.float32)
+        env_state = tf.convert_to_tensor(states, dtype=tf.float32)
         advantages = tf.convert_to_tensor(advantages, dtype=tf.float32)
         rewards = tf.convert_to_tensor(rewards, dtype=tf.float32)
 
-        return model.train_step(env_state, plr_state, one_hot_action, advantages, rewards)
+        return model.train_step(env_state, action, advantages, rewards)
 
     @staticmethod
-    def learn(agent_id, shapes, model_weights_queue, experience_queue, gamma=0.98):
-        env_state_shape, player_state_shape, action_space = shapes
-        model = A3CModel(env_state_shape, player_state_shape, action_space)
-        env = Env()
-        env_state, plr_state = env.reset()
-        model((tf.convert_to_tensor([env_state], dtype=tf.float32), tf.convert_to_tensor([plr_state], dtype=tf.float32)))
+    def learn(agent_id, model_weights_queue, experience_queue, desired_temps, gamma=0.98):
+        count_rooms = len(desired_temps)
+        model = A3CModel()
+        env = Env(desired_temps)
+        states = env.reset()
+        # lazy build
+        model(tf.convert_to_tensor(states, dtype=tf.float32))
         new_weights = model_weights_queue.get(timeout=60)
         model.set_weights(new_weights)
 
         episode = 0
         local_experience = []
-
         while episode < Agent.EXP_COUNTER:
-            states = env.reset()
-            action, value = Agent.choose_action(states, model)
-            next_env_state, next_plr_state, reward, done = env.step(action)
-            last_reward = reward
-            while not done and episode < Agent.EXP_COUNTER:
-                action, value = Agent.choose_action(states, model)
-                next_env_state, next_plr_state, reward, done = env.step(action)
-                _, next_value = model((tf.convert_to_tensor([next_env_state], dtype=tf.float32),
-                                       tf.convert_to_tensor([next_plr_state], dtype=tf.float32)))
+            actions, values = zip(*[Agent.choose_action(states[i], model, True) for i in range(count_rooms)])
+            next_states, rewards = env.step(actions, episode)
+            _, next_values = zip(*[Agent.choose_action(next_states[i], model, True) for i in range(count_rooms)])
 
-                # reward, last_reward = reward - last_reward, reward  # check without of this
+            target_value = np.array(rewards) + np.array(next_values) * gamma
+            advantages = target_value - np.array(values)
 
-                target_value = reward + (1 - done) * gamma * next_value
-                advantage = target_value - value
+            experience = (states, actions, advantages, rewards)
+            experience_queue.put(experience)  # ((agent_id, experience))
+            local_experience.append(experience)
+            episode += 1
 
-                experience = (env_state, plr_state, action, advantage.numpy(), reward)
-                experience_queue.put(experience)  # ((agent_id, experience))
-                local_experience.append(experience)
-
-                states = (next_env_state, next_plr_state)
-                episode += 1
-
-                if episode % 101 == 0:
-                    Agent.unpack_exp_and_step(model, local_experience, action_space)
-                    local_experience.clear()
+            if episode % 101 == 0:
+                Agent.unpack_exp_and_step(model, local_experience)
+                local_experience.clear()
 
         tf.keras.backend.clear_session()
 
+    # TODO work on those function
     @staticmethod
     def save_losses_csv(actor_losses, critic_losses, total_losses, output_dir='data/losses'):
         if not os.path.exists(output_dir):

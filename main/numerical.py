@@ -160,14 +160,14 @@ class TemperatureModel:
         self.last_switch_time = time
         self.heating_source_on = not self.heating_source_on
 
-    def get_in_values(self):
+    def get_in_values(self, time):
         """
         Get all indoor temperature values and heating source on/off status
 
         Returns:
             (tuple) of floats
         """
-        return self.indoor_temperature, self.heating_temperature, self.heating_source_on
+        return self.indoor_temperature, self.heating_temperature, self.heating_source_on, time - self.last_switch_time
 
     def get_out_values(self):
         """

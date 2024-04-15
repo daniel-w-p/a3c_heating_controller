@@ -44,7 +44,7 @@ def run_simulator():
         model = TwoStateSwitch()
     elif ai['RUN_MODE'] == AppMode.RUN:
         print("Start app in RUN mode (A3C controller)")
-        model = A3CModel(state_shape, 2)
+        model = A3CModel()
         if run_from_checkpoint:
             Agent.load_model(model)
 

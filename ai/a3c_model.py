@@ -1,7 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Dense, GRU, LeakyReLU, BatchNormalization
-from tensorflow.keras.preprocessing.image import img_to_array, load_img
+from tensorflow.keras.layers import Dense, GRU, LeakyReLU
 
 import setup
 
@@ -10,11 +9,9 @@ class A3CModel(Model):
     LEARNING_RATE = 0.001
     CLIP_NORM = 50.0
 
-    def __init__(self, state_size, action_size, learning_rate=LEARNING_RATE):
+    def __init__(self, learning_rate=LEARNING_RATE):
         super(A3CModel, self).__init__()
 
-        self.state_size = state_size
-        self.action_size = action_size
         self.learning_rate = learning_rate
 
         # GRU Layer
@@ -24,7 +21,7 @@ class A3CModel(Model):
         # Actor-Critic output
         self.last_dense = Dense(64)
         self.last_activation = LeakyReLU(alpha=0.1)
-        self.actor_out = Dense(self.action_size, activation='softmax')
+        self.actor_out = Dense(1, activation='sigmoid')
         self.critic_out = Dense(1, activation='linear')
 
         # Optimizer
@@ -44,16 +41,17 @@ class A3CModel(Model):
 
     def actor_loss(self, advantages, actions, action_probs, entropy_beta=0.01):
         action_probs = tf.clip_by_value(action_probs, 1e-8, 1 - 1e-8)
+
         log_probs = tf.math.log(action_probs)
+        log_probs_neg = tf.math.log(1 - action_probs)
 
-        selected_log_probs = tf.reduce_sum(log_probs * actions, axis=1, keepdims=True)
+        selected_log_probs = actions * log_probs + (1 - actions) * log_probs_neg
 
-        entropy = -tf.reduce_sum(action_probs * log_probs, axis=1)
+        entropy = -(action_probs * log_probs + (1 - action_probs) * log_probs_neg)
         mean_entropy = tf.reduce_mean(entropy)
 
-        advantages = tf.squeeze(advantages, axis=1)
-        policy_loss = -tf.reduce_mean(selected_log_probs * advantages)
-        loss = policy_loss - entropy_beta * mean_entropy
+        policy_loss = -tf.reduce_mean(selected_log_probs * advantages)  # minus for maximization
+        loss = policy_loss + entropy_beta * mean_entropy
 
         return loss
 
@@ -61,12 +59,11 @@ class A3CModel(Model):
         return tf.keras.losses.mean_squared_error(true_values, estimated_values)
 
     @tf.function(reduce_retracing=True)
-    def train_step(self, env_state, plr_state, one_hot_action, advantages, rewards):
-
+    def train_step(self, env_state, action, advantages, rewards):
         with tf.GradientTape() as tape:
-            action_probs, values = self.call((env_state, plr_state))
+            action_probs, values = self.call(env_state)
 
-            actor_loss = self.actor_loss(advantages, one_hot_action, action_probs)
+            actor_loss = self.actor_loss(advantages, action, action_probs)
 
             critic_loss = self.critic_loss(rewards, tf.squeeze(values))
 
