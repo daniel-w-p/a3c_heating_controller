@@ -1,6 +1,7 @@
 import math
 from .data_dict import DataDict
 # TODO : remember to penalizing to often heating switching and floor heating over desired max temp
+# TODO : simulation coefficients still needs to be checked and improved
 
 
 class TemperatureModel:
@@ -12,13 +13,14 @@ class TemperatureModel:
         max_floor_temperature (float): constant.
         min_out_temperature (float): constant.
         max_out_temperature (float): constant.
-        k_coef (float): constant coefficient of thermal transmittance.
+        k_coef (float): constant coefficient of thermal transmittance from room to outdoor.
+        mu_coef (float): constant coefficient of thermal transmittance from floor to room.
         alpha (float): constant coefficient - floor heating rate factor.
         beta (float): constant coefficient - floor cooling rate factor.
-        self.outdoor_temperature (float): approximated from sinus.
-        self.indoor_temperature (float): numerically approximated.
-        self.heating_temperature (float): numerically approximated.
-        self.heating_source_temp (float): some constant temperature.
+        outdoor_temperature (float): approximated from sinus.
+        indoor_temperature (float): numerically approximated.
+        heating_temperature (float): numerically approximated.
+        heating_source_temp (float): some constant temperature.
 
     Methods:
         calculate_outdoor_temperature: returns the outdoor temperature (float).
@@ -31,11 +33,11 @@ class TemperatureModel:
     min_out_temperature = -10.
     min_max_temp_distance = 11.
 
-    alpha = 0.0006 * 60  # because this is for minute
-    beta = 0.0012 * 60  # because this is for minute
+    alpha = 0.0006
+    beta = 0.0012
     # room size: 4 * 4 * 2.6 # there are always two outside walls 2 * 4 * 2.6 = 20.8
     k_coef = 20.8 * 0.5 / 50000  # TODO IMPROVE this should depend on the size of the room
-    mu_coef = 15 / 50000  # TODO IMPROVE this should depend on the size of the room
+    mu_coef = 70 / 50000  # TODO IMPROVE this should depend on the size of the room
 
     def __init__(self, heating_source_temp=40., sunrise_time=460, sub_minute_for_day=True):
         """
@@ -112,8 +114,7 @@ class TemperatureModel:
         self.calculate_outdoor_temperature(time)
         h = self.calculate_heating_effect(time)
 
-        self.indoor_temperature += h - self.k_coef * (
-                self.indoor_temperature - self.outdoor_temperature)
+        self.indoor_temperature += h - self.k_coef * (self.indoor_temperature - self.outdoor_temperature)
 
     def calculate_heating_temperature(self):
         """
@@ -140,7 +141,8 @@ class TemperatureModel:
         self.calculate_indoor_temperature(time)
         self.calculate_heating_temperature()
 
-        self.save_values_to_dict(time)
+        # TODO think about this
+        # self.save_values_to_dict(time)
 
     def step(self, action: bool, time: int):
         """
@@ -167,7 +169,9 @@ class TemperatureModel:
         Returns:
             (tuple) of floats
         """
-        return self.indoor_temperature, self.heating_temperature, self.heating_source_on, time - self.last_switch_time
+        on_off_time = (time - self.last_switch_time) % 1440
+        return (self.indoor_temperature, self.heating_temperature, self.heating_source_on,
+                math.sin(on_off_time/1440), math.cos(on_off_time/1440))
 
     def get_out_values(self):
         """

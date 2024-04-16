@@ -48,7 +48,7 @@ class Agent:
                 false_fn=lambda: tf.cast(action[0, 0] < random_value, tf.int32)
             )
 
-        return action.numpy(), value[0, 0].numpy()
+        return bool(action.numpy()), value[0, 0].numpy()
 
     @staticmethod
     def unpack_exp_and_step(model, experiences):
@@ -135,19 +135,4 @@ class Agent:
         plt.legend()
         plt.savefig(file)
         plt.close()
-
-    @staticmethod
-    def visualize_feature_maps(model, input_map, output_dir='data/feature_maps'):
-
-        feature_maps = model.map_nn.predict(input_map)
-
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-        for i in range(feature_maps.shape[-1]):
-            plt.figure(figsize=(2, 2))
-            plt.imshow(feature_maps[0, :, :, i], cmap='viridis')
-            plt.axis('off')
-            plt.savefig(f'{output_dir}/feature_map_{i}.png')
-            plt.close()
 

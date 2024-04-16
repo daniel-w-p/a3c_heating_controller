@@ -20,6 +20,8 @@ class Simulator:
         text_height = y + 10
         all_texts = zip(values, self.texts_inside)
         for val, desc in all_texts:
+            if isinstance(val, float):
+                val = round(val, 4)
             img = self.font.render(desc + str(val), True, self.BLACK)
             self.screen.blit(img, (x + 10, text_height))
             text_height += img.get_height() + 10
@@ -30,6 +32,8 @@ class Simulator:
         pygame.draw.rect(self.screen, self.BLACK, [x, y, width, height], 2)
         all_texts = zip(values, self.texts_outside)
         for val, desc in all_texts:
+            if isinstance(val, float):
+                val = round(val, 4)
             img = self.font.render(desc + str(val), True, self.BLACK)
             self.screen.blit(img, (x + 10, text_height))
             text_height += img.get_height() + 10

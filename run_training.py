@@ -10,8 +10,8 @@ from main import Environment
 
 
 def main():
-    num_agents = 2
-    epochs = 3
+    num_agents = 5
+    epochs = 5
     start_from_checkpoint = True
     desired_temps = [19.5, 20., 21., 21.5]
 
@@ -52,6 +52,7 @@ def main():
         # Prepare and run agents (multiprocessing)
         for a in range(num_agents):
             weights_queue.put(main_model_weights)
+            desired_temps += 0.2
             print("Creating Agent ", a)
             agent_process = mp.Process(target=Agent.learn,
                                        args=(a, weights_queue, experience_queue, desired_temps))

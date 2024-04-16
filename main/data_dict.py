@@ -5,6 +5,9 @@ from matplotlib import pyplot as plt
 
 
 class DataDict:
+    """
+    This is helper class to save all data about environment
+    """
     def __init__(self):
         self.data = {
             'time': [],
