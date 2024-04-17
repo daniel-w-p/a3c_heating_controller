@@ -18,7 +18,9 @@ This module, based on differential equations, simulates the dynamics of temperat
 
 The equation describing the change in indoor temperature over time is defined as:
 
-\[ \frac{dT}{dt} = \frac{1}{C} \left(\eta \cdot (H(t) - T(t)) - k \cdot A \cdot (T(t) - T_{\text{ext}}(t))\right) \]
+$$
+\frac{dT}{dt} = \frac{1}{C} \left(\eta \cdot (H(t) - T(t)) - k \cdot A \cdot (T(t) - T_{\text{ext}}(t))\right)
+$$
 
 ### Legend:
 
@@ -36,9 +38,9 @@ This equation describes how quickly the temperature in the room changes in respo
 
 Equation describing the change in floor temperature H(t) over time:
 
-```math
-\[ \frac{dH}{dt} = \alpha (H_{\text{max}} - H(t)) - \beta (H(t) - T(t)) \]
-```
+$$
+\frac{dH}{dt} = \alpha (H_{\text{max}} - H(t)) - \beta (H(t) - T(t))
+$$
 
 where:
 
