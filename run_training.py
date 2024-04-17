@@ -10,8 +10,8 @@ from main import Environment
 
 
 def main():
-    num_agents = 5
-    epochs = 5
+    num_agents = 4
+    epochs = 25
     start_from_checkpoint = True
     desired_temps = [19.5, 20., 21., 21.5]
 
@@ -48,11 +48,13 @@ def main():
         experience_queue = manager.Queue()
         agents = []
         main_model_weights = main_model.get_weights()
+        desired_temps = [19.5, 20., 21., 21.5]
+        experiences = []
 
         # Prepare and run agents (multiprocessing)
         for a in range(num_agents):
             weights_queue.put(main_model_weights)
-            desired_temps += 0.2
+            desired_temps = np.array(desired_temps) + 0.19
             print("Creating Agent ", a)
             agent_process = mp.Process(target=Agent.learn,
                                        args=(a, weights_queue, experience_queue, desired_temps))
@@ -60,7 +62,6 @@ def main():
             agent_process.start()
 
         print(f"Starting training epoch: {i}")
-        experiences = []
 
         # For progress monitoring
         total_steps = Agent.EXP_COUNTER * num_agents
@@ -87,7 +88,7 @@ def main():
 
         # Some logs.
         print(f'Epoch {i} finished. Updating main model weights')
-        rewards = [reward for _, _, _, reward in experiences]
+        rewards = [reward for _, _, _, reward, _ in experiences]
         print(f'Mean reward: {np.mean(rewards)}')
         print(f'Max reward: {np.max(rewards)}')
 

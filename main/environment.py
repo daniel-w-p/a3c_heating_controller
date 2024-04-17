@@ -55,7 +55,9 @@ class Environment:
         self.time = 0
         states = []
         actual_states = []
+        self.state_series = []
         for tm, rdt in zip(self.temp_model, self.rooms_desired_temp):
+            tm.reset()
             states.append((*tm.get_in_values(self.time), *tm.get_out_values(), rdt, self.time))
         states = np.array(states)
         # duplicating a single vector into a given array size
@@ -93,13 +95,17 @@ class Environment:
         for tm, rdt in zip(self.temp_model, self.rooms_desired_temp):
             values.append((rdt, *tm.get_in_values(self.time)))
 
-        values.append((*self.temp_model[0].get_out_values(), math.sin(self.time/1440), math.cos(self.time/1440)))
+        theta = (2 * math.pi * (self.time % 1440)) / 1440
+        values.append((*self.temp_model[0].get_out_values(), math.sin(theta), math.cos(theta)))
         return values
+
+    def get_time(self):
+        return self.time
 
     def get_penalty(self):
         penalties = []
         for tm, rdt in zip(self.temp_model, self.rooms_desired_temp):
-            penalties.append(-(10 * (tm.indoor_temperature - rdt))**2 - (10 * (max(0, tm.heating_temperature - tm.max_floor_temperature)))**2)  # max() - penalize only when the floor temperature exceeds the max
+            penalties.append(100 - (10 * (tm.indoor_temperature - rdt))**2 - (-10 * (max(0, tm.heating_temperature - tm.max_floor_temperature))))  # max() - penalize only when the floor temperature exceeds the max
         return penalties
 
 

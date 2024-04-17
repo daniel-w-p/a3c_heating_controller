@@ -58,6 +58,13 @@ class TemperatureModel:
         self.last_switch_time = 0
         self.data_dictionary = DataDict()
 
+    def reset(self):
+        self.outdoor_temperature = 0.
+        self.indoor_temperature = 20.
+        self.heating_temperature = 25.
+        self.heating_source_on = False
+        self.last_switch_time = 0
+
     def calculate_outdoor_temperature(self, time: int):
         """
         Simple sinus based simulation. Not really accurate.
@@ -170,8 +177,9 @@ class TemperatureModel:
             (tuple) of floats
         """
         on_off_time = (time - self.last_switch_time) % 1440
+        theta = (2 * math.pi * on_off_time) / 1440
         return (self.indoor_temperature, self.heating_temperature, self.heating_source_on,
-                math.sin(on_off_time/1440), math.cos(on_off_time/1440))
+                math.sin(theta), math.cos(theta))
 
     def get_out_values(self):
         """

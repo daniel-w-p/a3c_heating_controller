@@ -1,4 +1,5 @@
 import os
+os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
 import numpy as np
 import pandas as pd
@@ -10,7 +11,7 @@ from main import Environment as Env
 
 
 class Agent:
-    EXP_COUNTER = 1440  # how many experiences (actions in environment) 1440 = day
+    EXP_COUNTER = 2160  # how many experiences (actions in environment) 1440 = day
     SAVE_DIR = './saves/'
     SAVE_FILE = 'a3c_model'
 
@@ -32,7 +33,7 @@ class Agent:
             print("Weights file does not exist.")
 
     @staticmethod
-    def choose_action(state, model, training=False, simulate=False, epsilon=0.1):
+    def choose_action(state, model, training=False, simulate=False, epsilon=0.2):
         state_tensor = tf.convert_to_tensor([state], dtype=tf.float32)
 
         action, value = model(state_tensor, training=training)
@@ -52,16 +53,18 @@ class Agent:
 
     @staticmethod
     def unpack_exp_and_step(model, experiences):
-        states, actions, advantages, rewards = zip(*experiences)
+        states, actions, advantages, rewards, next_val = zip(*experiences)
 
         actions = np.array(actions)
         advantages = np.array(advantages)
         rewards = np.array(rewards)
+        next_val = np.array(next_val)
         states = np.array(states)
 
         actions = actions.reshape(-1).astype(np.float32)
         advantages = advantages.reshape(-1).astype(np.float32)
         rewards = rewards.reshape(-1).astype(np.float32)
+        next_val = next_val.reshape(-1).astype(np.float32)
 
         states = states.reshape(-1, states.shape[-2], states.shape[-1])
 
@@ -69,8 +72,9 @@ class Agent:
         env_state = tf.convert_to_tensor(states, dtype=tf.float32)
         advantages = tf.convert_to_tensor(advantages, dtype=tf.float32)
         rewards = tf.convert_to_tensor(rewards, dtype=tf.float32)
+        next_val = tf.convert_to_tensor(next_val, dtype=tf.float32)
 
-        return model.train_step(env_state, action, advantages, rewards)
+        return model.train_step(env_state, action, advantages, rewards, next_val)
 
     @staticmethod
     def learn(agent_id, model_weights_queue, experience_queue, desired_temps, gamma=0.98):
@@ -93,12 +97,12 @@ class Agent:
             target_value = np.array(rewards) + np.array(next_values) * gamma
             advantages = target_value - np.array(values)
 
-            experience = (states, actions, advantages, rewards)
+            experience = (states, actions, advantages, rewards, next_values)
             experience_queue.put(experience)  # ((agent_id, experience))
             local_experience.append(experience)
             episode += 1
 
-            if episode % 101 == 0:
+            if episode % 361 == 0:
                 Agent.unpack_exp_and_step(model, local_experience)
                 local_experience.clear()
 

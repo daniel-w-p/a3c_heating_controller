@@ -26,11 +26,11 @@ class Simulator:
             self.screen.blit(img, (x + 10, text_height))
             text_height += img.get_height() + 10
 
-    def draw_outside(self, width, height, values):
+    def draw_outside(self, width, height, values, time):
         x, y = 0, 0
         text_height = y + 10
         pygame.draw.rect(self.screen, self.BLACK, [x, y, width, height], 2)
-        all_texts = zip(values, self.texts_outside)
+        all_texts = zip((values[0], time), self.texts_outside)
         for val, desc in all_texts:
             if isinstance(val, float):
                 val = round(val, 4)
@@ -46,6 +46,7 @@ class Simulator:
 
         while running:
             values = env.get_values()
+            time = env.get_time()
 
             state = callback(model, env, state)
 
@@ -59,7 +60,7 @@ class Simulator:
             self.draw_room(start_x + self.room_width, start_y + self.room_height, self.room_width, self.room_height, values[3])
 
             # outside
-            self.draw_outside(self.room_width, 100, values[4])
+            self.draw_outside(self.room_width, 100, values[4], time)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
