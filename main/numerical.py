@@ -1,4 +1,7 @@
 import math
+
+import numpy as np
+
 from .data_dict import DataDict
 # TODO : remember to penalizing to often heating switching and floor heating over desired max temp
 # TODO : simulation coefficients still needs to be checked and improved
@@ -49,19 +52,21 @@ class TemperatureModel:
             sub_minute_for_day (bool): if True the sunrise time will be moved.
         """
         self.outdoor_temperature = 0.
-        self.indoor_temperature = 20.
-        self.heating_temperature = 25.
+        self.indoor_temperature = 18.
+        self.heating_temperature = 23.
         self.heating_source_temp = heating_source_temp
         self.sunrise_time = sunrise_time
         self.sub_minute_for_day = sub_minute_for_day
         self.heating_source_on = False
         self.last_switch_time = 0
         self.data_dictionary = DataDict()
+        self.reset()
 
     def reset(self):
+        random_val = np.random.uniform(0, 3)
         self.outdoor_temperature = 0.
-        self.indoor_temperature = 20.
-        self.heating_temperature = 25.
+        self.indoor_temperature = 18. + random_val
+        self.heating_temperature = 23. + random_val
         self.heating_source_on = False
         self.last_switch_time = 0
 

@@ -18,8 +18,11 @@ class A3CModel(Model):
         self.learning_rate = learning_rate
 
         # GRU Layer
-        self.gru = GRU(64, return_sequences=True, return_state=False)
-        self.gru_out = GRU(32)
+        self.gru = GRU(128, return_sequences=True, return_state=False)
+        self.gru_out = GRU(64)
+
+        self.mid_dense = Dense(128)
+        self.mid_activation = LeakyReLU(alpha=0.1)
 
         # Actor-Critic output
         self.last_dense = Dense(64)
@@ -36,6 +39,8 @@ class A3CModel(Model):
 
         x = self.gru(x)
         x = self.gru_out(x)
+        x = self.mid_dense(x)
+        x = self.mid_activation(x)
         x = self.last_dense(x)
         x = self.last_activation(x)
         actor_output = self.actor_out(x)

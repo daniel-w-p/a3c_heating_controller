@@ -10,10 +10,10 @@ from main import Environment
 
 
 def main():
-    num_agents = 4
-    epochs = 25
+    num_agents = 10
+    epochs = 20
     start_from_checkpoint = True
-    desired_temps = [19.5, 20., 21., 21.5]
+    desired_temps = [18., 18.5, 19., 19.5, 20., 20.5]
 
     # Dynamic GPU memory allocation for TensorFlow
     gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -48,13 +48,13 @@ def main():
         experience_queue = manager.Queue()
         agents = []
         main_model_weights = main_model.get_weights()
-        desired_temps = [19.5, 20., 21., 21.5]
+        desired_temps = [19., 19.5, 20., 20.5, 21., 21.5]
         experiences = []
 
         # Prepare and run agents (multiprocessing)
         for a in range(num_agents):
             weights_queue.put(main_model_weights)
-            desired_temps = np.array(desired_temps) + 0.19
+            desired_temps = np.array(desired_temps) + 0.17
             print("Creating Agent ", a)
             agent_process = mp.Process(target=Agent.learn,
                                        args=(a, weights_queue, experience_queue, desired_temps))
@@ -94,9 +94,9 @@ def main():
 
         # Update the main model based on the experiences collected from agents.
         actor_loss, critic_loss, total_loss = Agent.unpack_exp_and_step(main_model, experiences)
-        actor_losses.append(actor_loss.numpy())
-        critic_losses.append(critic_loss.numpy())
-        total_losses.append(total_loss.numpy())
+        actor_losses.append(actor_loss)
+        critic_losses.append(critic_loss)
+        total_losses.append(total_loss)
 
         if i > 0 and i % 5 == 0:  # save interval - 5 epochs
             epoch_dir = f'epoch_{i}/'

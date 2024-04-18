@@ -38,7 +38,7 @@ class Agent:
 
         action, value = model(state_tensor, training=training)
 
-        if simulate:
+        if simulate or action > 0.75 or action < 0.25:
             action = tf.where(action < 0.5, 0, 1)
         else:
             random_value = tf.random.uniform([], minval=0, maxval=1, dtype=tf.float32)
@@ -68,13 +68,33 @@ class Agent:
 
         states = states.reshape(-1, states.shape[-2], states.shape[-1])
 
-        action = tf.convert_to_tensor(actions, dtype=tf.float32)
-        env_state = tf.convert_to_tensor(states, dtype=tf.float32)
-        advantages = tf.convert_to_tensor(advantages, dtype=tf.float32)
-        rewards = tf.convert_to_tensor(rewards, dtype=tf.float32)
-        next_val = tf.convert_to_tensor(next_val, dtype=tf.float32)
+        # action = tf.convert_to_tensor(actions, dtype=tf.float32)
+        # env_state = tf.convert_to_tensor(states, dtype=tf.float32)
+        # advantages = tf.convert_to_tensor(advantages, dtype=tf.float32)
+        # rewards = tf.convert_to_tensor(rewards, dtype=tf.float32)
+        # next_val = tf.convert_to_tensor(next_val, dtype=tf.float32)
 
-        return model.train_step(env_state, action, advantages, rewards, next_val)
+        # create training batches
+        dim = len(experiences)
+        shuffled_indices = np.random.permutation(dim)
+        shuffled_actions = actions[shuffled_indices]
+        shuffled_advantages = advantages[shuffled_indices]
+        shuffled_rewards = rewards[shuffled_indices]
+        shuffled_next_val = next_val[shuffled_indices]
+        shuffled_states = states[shuffled_indices]
+        split_actions = np.array_split(shuffled_actions, 10)
+        split_advantages = np.array_split(shuffled_advantages, 10)
+        split_rewards = np.array_split(shuffled_rewards, 10)
+        split_next_val = np.array_split(shuffled_next_val, 10)
+        split_states = np.array_split(shuffled_states, 10)
+
+        actor_loss, critic_loss, total_loss = [], [], []
+        for env_state, action, advantages, rewards, next_val in zip(split_states, split_actions, split_advantages, split_rewards, split_next_val):
+            a, c, t = model.train_step(env_state, action, advantages, rewards, next_val)
+            actor_loss.append(a)
+            critic_loss.append(c)
+            total_loss.append(t)
+        return np.mean(actor_loss), np.mean(critic_loss), np.mean(total_loss)
 
     @staticmethod
     def learn(agent_id, model_weights_queue, experience_queue, desired_temps, gamma=0.98):
