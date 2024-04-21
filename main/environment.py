@@ -1,5 +1,4 @@
 import math
-import time
 
 import numpy as np
 
@@ -17,6 +16,9 @@ class Environment:
         state_series (list): list of timeseries of states vectors
         time (int): the time of the environment running
     """
+    T_DAY = 1440
+    T_HALF_DAY = T_DAY // 2
+
     def __init__(self, rooms_desired_temp: list, heating_source_temp=40., sunrise_time=460):
         """
         Constructor
@@ -25,9 +27,10 @@ class Environment:
             heating_source_temp (float): treated as constant
             sunrise_time: (int): in minutes
         """
+        random_val = np.random.uniform(-0.2, 0.2)
         self.rooms_num = len(rooms_desired_temp)
         self.rooms_desired_temp = rooms_desired_temp
-        self.temp_model = [TemperatureModel(heating_source_temp, sunrise_time, True) for _ in range(self.rooms_num)]
+        self.temp_model = [TemperatureModel(rooms_desired_temp[i]+random_val, heating_source_temp, sunrise_time, True) for i in range(self.rooms_num)]
         self.state_series = []
         self.time = 0
 
@@ -95,7 +98,7 @@ class Environment:
         for tm, rdt in zip(self.temp_model, self.rooms_desired_temp):
             values.append((rdt, *tm.get_in_values(self.time)))
 
-        theta = (2 * math.pi * (self.time % 1440)) / 1440
+        theta = (2 * math.pi * (self.time % self.T_DAY)) / self.T_DAY
         values.append((*self.temp_model[0].get_out_values(), math.sin(theta), math.cos(theta)))
         return values
 

@@ -15,7 +15,7 @@ class TemperatureModel:
         min_switch_time (int): constant.
         max_floor_temperature (float): constant.
         min_out_temperature (float): constant.
-        max_out_temperature (float): constant.
+        starting_indoor_temp (float): indoor temperature of simulation starting.
         k_coef (float): constant coefficient of thermal transmittance from room to outdoor.
         mu_coef (float): constant coefficient of thermal transmittance from floor to room.
         alpha (float): constant coefficient - floor heating rate factor.
@@ -42,7 +42,7 @@ class TemperatureModel:
     k_coef = 20.8 * 0.5 / 50000  # TODO IMPROVE this should depend on the size of the room
     mu_coef = 70 / 50000  # TODO IMPROVE this should depend on the size of the room
 
-    def __init__(self, heating_source_temp=40., sunrise_time=460, sub_minute_for_day=True):
+    def __init__(self, starting_indoor_temp=20, heating_source_temp=40., sunrise_time=460, sub_minute_for_day=True):
         """
         Constructor.
 
@@ -54,6 +54,7 @@ class TemperatureModel:
         self.outdoor_temperature = 0.
         self.indoor_temperature = 18.
         self.heating_temperature = 23.
+        self.starting_indoor_temp = starting_indoor_temp
         self.heating_source_temp = heating_source_temp
         self.sunrise_time = sunrise_time
         self.sub_minute_for_day = sub_minute_for_day
@@ -63,10 +64,10 @@ class TemperatureModel:
         self.reset()
 
     def reset(self):
-        random_val = np.random.uniform(0, 3)
+        random_val = np.random.uniform(0, 0.4)
         self.outdoor_temperature = 0.
-        self.indoor_temperature = 18. + random_val
-        self.heating_temperature = 23. + random_val
+        self.indoor_temperature = self.starting_indoor_temp
+        self.heating_temperature = 24.8 + random_val
         self.heating_source_on = False
         self.last_switch_time = 0
 
