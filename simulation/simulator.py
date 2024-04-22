@@ -18,20 +18,18 @@ class Simulator:
     def draw_room(self, x, y, width, height, values):
         pygame.draw.rect(self.screen, self.BLACK, [x, y, width, height], 2)
         text_height = y + 10
-        all_texts = zip(values, self.texts_inside)
-        for val, desc in all_texts:
+        for val, desc in zip(values, self.texts_inside):
             if isinstance(val, float):
                 val = round(val, 4)
             img = self.font.render(desc + str(val), True, self.BLACK)
             self.screen.blit(img, (x + 10, text_height))
             text_height += img.get_height() + 10
 
-    def draw_outside(self, width, height, values, time):
+    def draw_outside(self, width, height, values):
         x, y = 0, 0
         text_height = y + 10
         pygame.draw.rect(self.screen, self.BLACK, [x, y, width, height], 2)
-        all_texts = zip((values[0], time), self.texts_outside)
-        for val, desc in all_texts:
+        for val, desc in zip(values, self.texts_outside):
             if isinstance(val, float):
                 val = round(val, 4)
             img = self.font.render(desc + str(val), True, self.BLACK)
@@ -46,7 +44,6 @@ class Simulator:
 
         while running:
             values = env.get_values()
-            time = env.get_time()
 
             state = callback(model, env, state)
 

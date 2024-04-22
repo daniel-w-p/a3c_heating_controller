@@ -11,7 +11,7 @@ from main import Environment as Env
 
 
 class Agent:
-    EXP_COUNTER = 2200  # how many experiences (actions in environment) 1440 = day
+    EXP_COUNTER = 4000  # how many experiences (actions in environment) 1440 = day
     SAVE_DIR = './saves/'
     SAVE_FILE = 'a3c_model'
 
@@ -33,21 +33,20 @@ class Agent:
             print("Weights file does not exist.")
 
     @staticmethod
-    def choose_action(state, model, training=False, simulate=False, epsilon=0.1):
+    def choose_action(state, model, training=False, simulate=False, epsilon=0.2):
         state_tensor = tf.convert_to_tensor([state], dtype=tf.float32)
 
         action, value = model(state_tensor, training=training)
+        random_value = tf.random.uniform([], minval=0, maxval=1, dtype=tf.float32)
 
         action = action[0, 0]
-        if simulate or action > 0.75 or action < 0.25:
-            action = tf.where(action < 0.5, 0, 1).numpy()
+        if simulate or (random_value > epsilon and (action > 0.65 or action < 0.35)):
+            action = action < 0.5
+            # action = False
         else:
-            random_value = tf.random.uniform([], minval=0, maxval=1, dtype=tf.float32)
             last_action = state[-1, 2]
-            if random_value < epsilon:
-                action = 1 - last_action
-            else:
-                action = last_action
+            action = (last_action + action) / 3 * 2 > random_value
+
             # random_value = tf.random.uniform([], minval=0, maxval=1, dtype=tf.float32)
             # random_choice = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32)  # choose 0 lub 1
             # action = tf.cond(

@@ -3,7 +3,7 @@ os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, GRU, LeakyReLU
+from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization
 
 import setup
 
@@ -23,10 +23,12 @@ class A3CModel(Model):
 
         self.mid_dense = Dense(128)
         self.mid_activation = LeakyReLU(alpha=0.1)
+        self.mid_norm = BatchNormalization()
 
         # Actor-Critic output
         self.last_dense = Dense(64)
         self.last_activation = LeakyReLU(alpha=0.1)
+        self.last_norm = BatchNormalization()
         self.actor_out = Dense(1, activation='sigmoid')
         self.critic_out = Dense(1, activation='linear')
 
@@ -41,8 +43,10 @@ class A3CModel(Model):
         x = self.gru_out(x)
         x = self.mid_dense(x)
         x = self.mid_activation(x)
+        x = self.mid_norm(x)
         x = self.last_dense(x)
         x = self.last_activation(x)
+        x = self.last_norm(x)
         actor_output = self.actor_out(x)
         critic_output = self.critic_out(x)
         return actor_output, critic_output

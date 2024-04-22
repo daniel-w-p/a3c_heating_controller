@@ -40,7 +40,7 @@ class TemperatureModel:
     beta = 0.0012
     # room size: 4 * 4 * 2.6 # there are always two outside walls 2 * 4 * 2.6 = 20.8
     k_coef = 20.8 * 0.5 / 50000  # TODO IMPROVE this should depend on the size of the room
-    mu_coef = 70 / 50000  # TODO IMPROVE this should depend on the size of the room
+    mu_coef = 2.7 / 50000  # TODO IMPROVE this should depend on the size of the room
 
     def __init__(self, starting_indoor_temp=20, heating_source_temp=40., sunrise_time=460, sub_minute_for_day=True):
         """
@@ -104,7 +104,7 @@ class TemperatureModel:
         Returns:
             float: heating effect.
         """
-        return self.mu_coef * (self.heating_temperature - self.indoor_temperature)
+        return (self.heating_temperature * self.mu_coef) * (self.heating_temperature - self.indoor_temperature)
 
     def calculate_indoor_temperature(self, time: int):
         """

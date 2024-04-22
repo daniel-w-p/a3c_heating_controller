@@ -44,9 +44,10 @@ class Environment:
         Returns:
             tuple of (temperatures, heating_source, desired_temp and time)
         """
+        theta = (2 * math.pi * (self.time % self.T_DAY)) / self.T_DAY
         in_values = self.temp_model[room_id].get_in_values(self.time)
         out_values = self.temp_model[room_id].get_out_values()
-        state = *in_values, *out_values, self.rooms_desired_temp[room_id], self.time
+        state = *in_values, *out_values, self.rooms_desired_temp[room_id], math.sin(theta), math.cos(theta)
         return state
 
     def reset(self):
@@ -59,12 +60,13 @@ class Environment:
         states = []
         actual_states = []
         self.state_series = []
+        theta = (2 * math.pi * (self.time % self.T_DAY)) / self.T_DAY
         for tm, rdt in zip(self.temp_model, self.rooms_desired_temp):
             tm.reset()
-            states.append((*tm.get_in_values(self.time), *tm.get_out_values(), rdt, self.time))
+            states.append((*tm.get_in_values(self.time), *tm.get_out_values(), rdt, math.sin(theta), math.cos(theta)))
         states = np.array(states)
         # duplicating a single vector into a given array size
-        self.state_series = np.tile(states[:, np.newaxis, np.newaxis, :], (1, 15, 20, 1))  # 15min * 20 = 5h
+        self.state_series = np.tile(states[:, np.newaxis, np.newaxis, :], (1, 15, 32, 1))  # 15min * 32 = 8h
         for i in range(self.rooms_num):
             actual_states.append(self.state_series[i, 0, :, :])
 
@@ -86,7 +88,7 @@ class Environment:
         for i, action in enumerate(actions):
             self.temp_model[i].step(action, self.time)
             # adding vector on last position in list and remove first one but doing this once per 15 min.
-            # that makes range of 5 hours (15min * 20 vectors in matrix)
+            # that makes range of 8 hours (15min * 32 vectors in matrix)
             new_states = np.vstack([self.state_series[i][self.time % 15][1:], self.get_state(i)])
             self.state_series[i][self.time % 15] = new_states
             actual_states.append(new_states)
@@ -98,8 +100,7 @@ class Environment:
         for tm, rdt in zip(self.temp_model, self.rooms_desired_temp):
             values.append((rdt, *tm.get_in_values(self.time)))
 
-        theta = (2 * math.pi * (self.time % self.T_DAY)) / self.T_DAY
-        values.append((*self.temp_model[0].get_out_values(), math.sin(theta), math.cos(theta)))
+        values.append((*self.temp_model[0].get_out_values(), self.time))
         return values
 
     def get_time(self):
