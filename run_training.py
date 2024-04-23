@@ -11,7 +11,7 @@ from main import Environment
 
 def main():
     num_agents = 10
-    epochs = 3
+    epochs = 20
     start_from_checkpoint = True
     desired_temps = [18., 18.5, 19., 19.5, 20., 20.5]
 
@@ -97,6 +97,8 @@ def main():
         actor_losses.append(actor_loss)
         critic_losses.append(critic_loss)
         total_losses.append(total_loss)
+
+        print(f"Losses:\n t - {total_losses} ;\n a - {actor_losses} ;\n c - {critic_losses}")
 
         if i > 0 and i % 5 == 0:  # save interval - 5 epochs
             epoch_dir = f'epoch_{i}/'

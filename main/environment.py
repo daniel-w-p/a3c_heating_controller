@@ -86,7 +86,7 @@ class Environment:
         self.time += time_step
         actual_states = []
         for i, action in enumerate(actions):
-            self.temp_model[i].step(action, self.time)
+            self.temp_model[i].step(bool(action), self.time)
             # adding vector on last position in list and remove first one but doing this once per 15 min.
             # that makes range of 8 hours (15min * 32 vectors in matrix)
             new_states = np.vstack([self.state_series[i][self.time % 15][1:], self.get_state(i)])

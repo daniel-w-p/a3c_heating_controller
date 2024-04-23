@@ -70,6 +70,7 @@ class TemperatureModel:
         self.heating_temperature = 24.8 + random_val
         self.heating_source_on = False
         self.last_switch_time = 0
+        self.calculate_outdoor_temperature(0)
 
     def calculate_outdoor_temperature(self, time: int):
         """
@@ -81,10 +82,10 @@ class TemperatureModel:
         # TODO later possible add support for the influence of cloud cover on temperature
         sunrise_time = self.sunrise_time
         half_temp_diff = self.min_max_temp_distance / 2
-        day_time = 420
-        if self.sub_minute_for_day and sunrise_time - time // 1440 > 300 and day_time < 600:  # TODO this could be done better (because in real it is not 2 min. per day)
-            sunrise_time -= time // 720    # 2 minutes per day
-            day_time += time // 360         # if sunrise is one minute earlier and sunset is later that gives 2 min.
+        day_time = 420  # how long the day is
+        # if self.sub_minute_for_day and sunrise_time - time // 1440 > 300 and day_time < 600:  # TODO this could be done better (because in real it is not 2 min. per day)
+        #     sunrise_time -= time // 720    # 2 minutes per day
+        #     day_time += time // 360         # if sunrise is one minute earlier and sunset is later that gives 2 min.
         self.outdoor_temperature = (self.min_out_temperature + half_temp_diff + (day_time / 420) - 1 +
                                     half_temp_diff * math.sin((2 * math.pi / 1440) * (time % 1440 - sunrise_time)))
 

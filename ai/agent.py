@@ -1,4 +1,5 @@
 import os
+
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
 import numpy as np
@@ -11,7 +12,7 @@ from main import Environment as Env
 
 
 class Agent:
-    EXP_COUNTER = 4000  # how many experiences (actions in environment) 1440 = day
+    EXP_COUNTER = 2880  # how many experiences (actions in environment) 1440 = day
     SAVE_DIR = './saves/'
     SAVE_FILE = 'a3c_model'
 
@@ -21,41 +22,42 @@ class Agent:
             os.makedirs(save_dir)
 
     @staticmethod
-    def save_model(model, save_file=SAVE_DIR+SAVE_FILE):
+    def save_model(model, save_file=SAVE_DIR + SAVE_FILE):
         model.save_weights(save_file)
 
     @staticmethod
-    def load_model(model, load_file=SAVE_DIR+SAVE_FILE):
-        if os.path.exists(load_file+'.index'):
+    def load_model(model, load_file=SAVE_DIR + SAVE_FILE):
+        if os.path.exists(load_file + '.index'):
             model.load_weights(load_file)
             print("Weights loaded successfully.")
         else:
             print("Weights file does not exist.")
 
     @staticmethod
-    def choose_action(state, model, training=False, simulate=False, epsilon=0.2):
+    def choose_simulation_action(state, model, training=False):
         state_tensor = tf.convert_to_tensor([state], dtype=tf.float32)
+
+        action, _ = model(state_tensor, training=training)
+        action = action[0, 0] > 0.5
+        return action
+
+    @staticmethod
+    def choose_action(state, model, training=False, epsilon=0.2):
+        state_tensor = tf.convert_to_tensor(state, dtype=tf.float32)
 
         action, value = model(state_tensor, training=training)
         random_value = tf.random.uniform([], minval=0, maxval=1, dtype=tf.float32)
 
-        action = action[0, 0]
-        if simulate or (random_value > epsilon and (action > 0.65 or action < 0.35)):
-            action = action < 0.5
-            # action = False
+        if random_value > epsilon:
+            action = tf.where(action > 0.5, 1, 0)
         else:
-            last_action = state[-1, 2]
-            action = (last_action + action) / 3 * 2 > random_value
+            # last_action = tf.expand_dims(state_tensor[:, -1, 2], axis=1)
+            # action = (last_action + action) / 3 * 2 > random_value
 
-            # random_value = tf.random.uniform([], minval=0, maxval=1, dtype=tf.float32)
-            # random_choice = tf.random.uniform([], minval=0, maxval=2, dtype=tf.int32)  # choose 0 lub 1
-            # action = tf.cond(
-            #     random_value < epsilon,
-            #     true_fn=lambda: random_choice,
-            #     false_fn=lambda: tf.cast(action[0, 0] < random_value, tf.int32)
-            # )
+            random_value = tf.random.uniform([], minval=0, maxval=1, dtype=tf.float32)
+            action = tf.cast(action < random_value, tf.int32)
 
-        return bool(action), value[0, 0].numpy()
+        return action.numpy(), value.numpy()
 
     @staticmethod
     def unpack_exp_and_step(model, experiences):
@@ -73,6 +75,21 @@ class Agent:
         next_val = next_val.reshape(-1).astype(np.float32)
 
         states = states.reshape(-1, states.shape[-2], states.shape[-1])
+
+        if np.isnan(actions).any():
+            print("NaNs in actions")
+            print(actions)
+        if np.isnan(advantages).any():
+            print("NaNs in advantages")
+            print(advantages)
+        if np.isnan(rewards).any():
+            print("NaNs in rewards")
+            print(rewards)
+        if np.isnan(next_val).any():
+            print("NaNs in next_val")
+            print(next_val)
+        if np.isnan(states).any():
+            print("NaNs in states")
 
         # action = tf.convert_to_tensor(actions, dtype=tf.float32)
         # env_state = tf.convert_to_tensor(states, dtype=tf.float32)
@@ -95,7 +112,8 @@ class Agent:
         split_states = np.array_split(shuffled_states, 10)
 
         actor_loss, critic_loss, total_loss = [], [], []
-        for env_state, action, advantages, rewards, next_val in zip(split_states, split_actions, split_advantages, split_rewards, split_next_val):
+        for env_state, action, advantages, rewards, next_val in zip(split_states, split_actions, split_advantages,
+                                                                    split_rewards, split_next_val):
             a, c, t = model.train_step(env_state, action, advantages, rewards, next_val)
             actor_loss.append(a)
             critic_loss.append(c)
@@ -116,9 +134,9 @@ class Agent:
         episode = 0
         local_experience = []
         while episode < Agent.EXP_COUNTER:
-            actions, values = zip(*[Agent.choose_action(states[i], model, True) for i in range(count_rooms)])
+            actions, values = Agent.choose_action(states, model, True)
             next_states, rewards = env.step(actions, episode)
-            _, next_values = zip(*[Agent.choose_action(next_states[i], model, True) for i in range(count_rooms)])
+            _, next_values = Agent.choose_action(next_states, model, True)
 
             target_value = np.array(rewards) + np.array(next_values) * gamma
             advantages = target_value - np.array(values)
@@ -128,9 +146,10 @@ class Agent:
             local_experience.append(experience)
             episode += 1
 
-            if episode % 361 == 0:
-                Agent.unpack_exp_and_step(model, local_experience)
-                local_experience.clear()
+            # if episode % 361 == 0:
+            #     print(f"Agent: {agent_id} ; Episode: {episode}")
+            #     Agent.unpack_exp_and_step(model, local_experience)
+            #     local_experience.clear()
 
         tf.keras.backend.clear_session()
 
@@ -165,4 +184,3 @@ class Agent:
         plt.legend()
         plt.savefig(file)
         plt.close()
-

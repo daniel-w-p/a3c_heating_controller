@@ -12,9 +12,9 @@ COUNT_ROOMS = 4
 
 def make_step(model, env, state):
     if ai['RUN_MODE'] == AppMode.COMPARE:
-        actions = [model.choose_action(state) for _ in range(COUNT_ROOMS)]
+        actions = [model.choose_simulation_action(state) for _ in range(COUNT_ROOMS)]
     else:  # if ai['RUN_MODE'] == AppMode.RUN:
-        actions = [Agent.choose_action(state[i], model, False, True)[0] for i in range(COUNT_ROOMS)]
+        actions = [Agent.choose_simulation_action(state[i], model, False) for i in range(COUNT_ROOMS)]
 
     state, _ = env.step(actions, 1)  # 1 - one minute
     return state

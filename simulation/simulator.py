@@ -57,7 +57,7 @@ class Simulator:
             self.draw_room(start_x + self.room_width, start_y + self.room_height, self.room_width, self.room_height, values[3])
 
             # outside
-            self.draw_outside(self.room_width, 100, values[4], time)
+            self.draw_outside(self.room_width, 100, values[4])
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

@@ -14,7 +14,7 @@ class TwoStateSwitch:
     def switch(self, state):
         self.state = state
 
-    def choose_action(self, temperature):
+    def choose_simulation_action(self, temperature):
         if temperature > self.desired_temp + self.hysteresis:
             self.switch(False)
         elif temperature < self.desired_temp - self.hysteresis:

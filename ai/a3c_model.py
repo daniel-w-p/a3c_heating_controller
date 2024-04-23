@@ -1,16 +1,17 @@
 import os
+
+import numpy as np
+
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization
 
-import setup
-
 
 class A3CModel(Model):
-    LEARNING_RATE = 0.001
-    CLIP_NORM = 50.0
+    LEARNING_RATE = 0.0001
+    CLIP_NORM = 20.0
 
     def __init__(self, learning_rate=LEARNING_RATE):
         super(A3CModel, self).__init__()
@@ -71,14 +72,17 @@ class A3CModel(Model):
         return tf.keras.losses.mean_squared_error(true_values, estimated_values)
 
     @tf.function(reduce_retracing=True)
-    def train_step(self, env_state, action, advantages, rewards, next_values, gamma=0.98):
+    def train_step(self, env_state, actions, advantages, rewards, next_values, gamma=0.98):
         with tf.GradientTape() as tape:
             action_probs, values = self.call(env_state)
 
-            actor_loss = self.actor_loss(advantages, action, action_probs)
+            actor_loss = self.actor_loss(advantages, actions, action_probs)
 
             true_values = rewards + gamma * tf.squeeze(next_values)
             critic_loss = self.critic_loss(true_values, tf.squeeze(values))
+
+            # tf.print(true_values, values)
+            # tf.print(actor_loss, critic_loss)
 
             total_loss = actor_loss + critic_loss
 
