@@ -10,7 +10,7 @@ from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization
 
 
 class A3CModel(Model):
-    LEARNING_RATE = 0.0001
+    LEARNING_RATE = 0.0005
     CLIP_NORM = 20.0
 
     def __init__(self, learning_rate=LEARNING_RATE):
@@ -23,7 +23,7 @@ class A3CModel(Model):
         self.gru_out = GRU(64)
 
         self.mid_dense = Dense(128)
-        self.mid_activation = LeakyReLU(alpha=0.1)
+        self.mid_activation = LeakyReLU(alpha=0.2)
         self.mid_norm = BatchNormalization()
 
         # Actor-Critic output
@@ -80,9 +80,6 @@ class A3CModel(Model):
 
             true_values = rewards + gamma * tf.squeeze(next_values)
             critic_loss = self.critic_loss(true_values, tf.squeeze(values))
-
-            # tf.print(true_values, values)
-            # tf.print(actor_loss, critic_loss)
 
             total_loss = actor_loss + critic_loss
 

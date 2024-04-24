@@ -76,21 +76,6 @@ class Agent:
 
         states = states.reshape(-1, states.shape[-2], states.shape[-1])
 
-        if np.isnan(actions).any():
-            print("NaNs in actions")
-            print(actions)
-        if np.isnan(advantages).any():
-            print("NaNs in advantages")
-            print(advantages)
-        if np.isnan(rewards).any():
-            print("NaNs in rewards")
-            print(rewards)
-        if np.isnan(next_val).any():
-            print("NaNs in next_val")
-            print(next_val)
-        if np.isnan(states).any():
-            print("NaNs in states")
-
         # action = tf.convert_to_tensor(actions, dtype=tf.float32)
         # env_state = tf.convert_to_tensor(states, dtype=tf.float32)
         # advantages = tf.convert_to_tensor(advantages, dtype=tf.float32)
@@ -114,6 +99,22 @@ class Agent:
         actor_loss, critic_loss, total_loss = [], [], []
         for env_state, action, advantages, rewards, next_val in zip(split_states, split_actions, split_advantages,
                                                                     split_rewards, split_next_val):
+
+            # action_probs, values = model.call(env_state)
+            # action_probs = tf.clip_by_value(action_probs, 1e-8, 1 - 1e-8)
+            #
+            # log_probs = tf.math.log(action_probs)
+            # log_probs_neg = tf.math.log(1 - action_probs)
+            #
+            # selected_log_probs = action * log_probs + (1 - action) * log_probs_neg
+            #
+            # entropy = -(action_probs * log_probs + (1 - action_probs) * log_probs_neg)
+            # mean_entropy = tf.reduce_mean(entropy)
+            #
+            # policy_loss = -tf.reduce_mean(selected_log_probs * advantages)  # minus for maximization
+            # loss = policy_loss + 0.01 * mean_entropy
+            action = tf.expand_dims(action, axis=1)
+
             a, c, t = model.train_step(env_state, action, advantages, rewards, next_val)
             actor_loss.append(a)
             critic_loss.append(c)
