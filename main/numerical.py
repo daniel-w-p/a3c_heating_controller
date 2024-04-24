@@ -83,7 +83,8 @@ class TemperatureModel:
         sunrise_time = self.sunrise_time
         half_temp_diff = self.min_max_temp_distance / 2
         day_time = 420  # how long the day is
-        # if self.sub_minute_for_day and sunrise_time - time // 1440 > 300 and day_time < 600:  # TODO this could be done better (because in real it is not 2 min. per day)
+        # TODO this could be done better (because in real it is not 2 min. per day)
+        # if self.sub_minute_for_day and sunrise_time - time // 1440 > 300 and day_time < 600:
         #     sunrise_time -= time // 720    # 2 minutes per day
         #     day_time += time // 360         # if sunrise is one minute earlier and sunset is later that gives 2 min.
         self.outdoor_temperature = (self.min_out_temperature + half_temp_diff + (day_time / 420) - 1 +

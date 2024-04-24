@@ -76,12 +76,6 @@ class Agent:
 
         states = states.reshape(-1, states.shape[-2], states.shape[-1])
 
-        # action = tf.convert_to_tensor(actions, dtype=tf.float32)
-        # env_state = tf.convert_to_tensor(states, dtype=tf.float32)
-        # advantages = tf.convert_to_tensor(advantages, dtype=tf.float32)
-        # rewards = tf.convert_to_tensor(rewards, dtype=tf.float32)
-        # next_val = tf.convert_to_tensor(next_val, dtype=tf.float32)
-
         # create training batches
         dim = len(experiences)
         shuffled_indices = np.random.permutation(dim)
@@ -100,19 +94,6 @@ class Agent:
         for env_state, action, advantages, rewards, next_val in zip(split_states, split_actions, split_advantages,
                                                                     split_rewards, split_next_val):
 
-            # action_probs, values = model.call(env_state)
-            # action_probs = tf.clip_by_value(action_probs, 1e-8, 1 - 1e-8)
-            #
-            # log_probs = tf.math.log(action_probs)
-            # log_probs_neg = tf.math.log(1 - action_probs)
-            #
-            # selected_log_probs = action * log_probs + (1 - action) * log_probs_neg
-            #
-            # entropy = -(action_probs * log_probs + (1 - action_probs) * log_probs_neg)
-            # mean_entropy = tf.reduce_mean(entropy)
-            #
-            # policy_loss = -tf.reduce_mean(selected_log_probs * advantages)  # minus for maximization
-            # loss = policy_loss + 0.01 * mean_entropy
             action = tf.expand_dims(action, axis=1)
 
             a, c, t = model.train_step(env_state, action, advantages, rewards, next_val)
@@ -146,11 +127,6 @@ class Agent:
             experience_queue.put(experience)  # ((agent_id, experience))
             local_experience.append(experience)
             episode += 1
-
-            # if episode % 361 == 0:
-            #     print(f"Agent: {agent_id} ; Episode: {episode}")
-            #     Agent.unpack_exp_and_step(model, local_experience)
-            #     local_experience.clear()
 
         tf.keras.backend.clear_session()
 
