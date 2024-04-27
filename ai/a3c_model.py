@@ -10,8 +10,8 @@ from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization
 
 
 class A3CModel(Model):
-    LEARNING_RATE = 0.0005
-    CLIP_NORM = 20.0
+    LEARNING_RATE = 0.0009
+    CLIP_NORM = 25.0
 
     def __init__(self, learning_rate=LEARNING_RATE):
         super(A3CModel, self).__init__()
@@ -19,18 +19,28 @@ class A3CModel(Model):
         self.learning_rate = learning_rate
 
         # GRU Layer
-        self.gru = GRU(128, return_sequences=True, return_state=False)
-        self.gru_out = GRU(64)
+        self.gru_one = GRU(128, return_sequences=True, return_state=False)
+        self.gru_two = GRU(64, return_sequences=True, return_state=False)
+        self.gru_thr = GRU(32, return_sequences=True, return_state=False)
+        self.gru_out = GRU(32)
 
-        self.mid_dense = Dense(128)
-        self.mid_activation = LeakyReLU(alpha=0.2)
-        self.mid_norm = BatchNormalization()
+        # self.mid_dense = Dense(128)
+        # self.mid_activation = LeakyReLU(alpha=0.2)
+        # self.mid_norm = BatchNormalization()
 
         # Actor-Critic output
         self.last_dense = Dense(64)
         self.last_activation = LeakyReLU(alpha=0.1)
         self.last_norm = BatchNormalization()
+
+        self.actor_dense = Dense(16)
+        self.actor_activation = LeakyReLU(alpha=0.1)
+        self.actor_norm = BatchNormalization()
         self.actor_out = Dense(1, activation='sigmoid')
+
+        self.critic_dense = Dense(16)
+        self.critic_activation = LeakyReLU(alpha=0.1)
+        self.critic_norm = BatchNormalization()
         self.critic_out = Dense(1, activation='linear')
 
         # Optimizer
@@ -40,16 +50,27 @@ class A3CModel(Model):
         # Input Layer
         x = inputs
 
-        x = self.gru(x)
+        x = self.gru_one(x)
+        x = self.gru_two(x)
+        x = self.gru_thr(x)
         x = self.gru_out(x)
-        x = self.mid_dense(x)
-        x = self.mid_activation(x)
-        x = self.mid_norm(x)
+        # x = self.mid_dense(x)
+        # x = self.mid_activation(x)
+        # x = self.mid_norm(x)
         x = self.last_dense(x)
         x = self.last_activation(x)
         x = self.last_norm(x)
-        actor_output = self.actor_out(x)
-        critic_output = self.critic_out(x)
+
+        a_out = self.actor_dense(x)
+        a_out = self.actor_activation(a_out)
+        a_out = self.actor_norm(a_out)
+
+        c_out = self.critic_dense(x)
+        c_out = self.critic_activation(c_out)
+        c_out = self.critic_norm(c_out)
+
+        actor_output = self.actor_out(a_out)
+        critic_output = self.critic_out(c_out)
         return actor_output, critic_output
 
     def actor_loss(self, advantages, actions, action_probs, entropy_beta=0.01):
@@ -63,7 +84,7 @@ class A3CModel(Model):
         entropy = -(action_probs * log_probs + (1 - action_probs) * log_probs_neg)
         mean_entropy = tf.reduce_mean(entropy)
 
-        policy_loss = -tf.reduce_mean(selected_log_probs * advantages)  # minus for maximization
+        policy_loss = -tf.reduce_mean(selected_log_probs * -advantages)  # minus for maximization
         loss = policy_loss + entropy_beta * mean_entropy
 
         return loss

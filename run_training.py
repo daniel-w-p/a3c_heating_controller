@@ -10,8 +10,8 @@ from main import Environment
 
 
 def main():
-    num_agents = 10
-    epochs = 20
+    num_agents = 6
+    epochs = 5
     start_from_checkpoint = True
     desired_temps = [18., 18.5, 19., 19.5, 20., 20.5]
 
@@ -28,7 +28,7 @@ def main():
     main_model = A3CModel()
     # Lazy build
     states = env.reset()
-    # here four rooms are treated as a bach for single room (4, 15, 7)
+    # here some rooms [len(desired_temps)] are treated as a bach for single room
     main_model(tf.convert_to_tensor(states, dtype=tf.float32))
 
     main_model.summary()

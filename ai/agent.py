@@ -42,7 +42,7 @@ class Agent:
         return action
 
     @staticmethod
-    def choose_action(state, model, training=False, epsilon=0.2):
+    def choose_action(state, model, training=False, epsilon=0.15):
         state_tensor = tf.convert_to_tensor(state, dtype=tf.float32)
 
         action, value = model(state_tensor, training=training)
@@ -126,6 +126,7 @@ class Agent:
             experience = (states, actions, advantages, rewards, next_values)
             experience_queue.put(experience)  # ((agent_id, experience))
             local_experience.append(experience)
+            states = next_states
             episode += 1
 
         tf.keras.backend.clear_session()
