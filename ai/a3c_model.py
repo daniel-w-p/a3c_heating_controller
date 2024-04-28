@@ -10,7 +10,7 @@ from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization
 
 
 class A3CModel(Model):
-    LEARNING_RATE = 0.0009
+    LEARNING_RATE = 0.000009
     CLIP_NORM = 25.0
 
     def __init__(self, learning_rate=LEARNING_RATE):
@@ -19,10 +19,10 @@ class A3CModel(Model):
         self.learning_rate = learning_rate
 
         # GRU Layer
-        self.gru_one = GRU(128, return_sequences=True, return_state=False)
-        self.gru_two = GRU(64, return_sequences=True, return_state=False)
-        self.gru_thr = GRU(32, return_sequences=True, return_state=False)
-        self.gru_out = GRU(32)
+        self.gru_one = GRU(256, return_sequences=True, return_state=False)
+        self.gru_two = GRU(128, return_sequences=True, return_state=False)
+        # self.gru_thr = GRU(64, return_sequences=True, return_state=False)
+        self.gru_out = GRU(64)
 
         # self.mid_dense = Dense(128)
         # self.mid_activation = LeakyReLU(alpha=0.2)
@@ -30,7 +30,7 @@ class A3CModel(Model):
 
         # Actor-Critic output
         self.last_dense = Dense(64)
-        self.last_activation = LeakyReLU(alpha=0.1)
+        self.last_activation = LeakyReLU(alpha=0.2)
         self.last_norm = BatchNormalization()
 
         self.actor_dense = Dense(16)
@@ -52,7 +52,7 @@ class A3CModel(Model):
 
         x = self.gru_one(x)
         x = self.gru_two(x)
-        x = self.gru_thr(x)
+        # x = self.gru_thr(x)
         x = self.gru_out(x)
         # x = self.mid_dense(x)
         # x = self.mid_activation(x)
@@ -84,7 +84,7 @@ class A3CModel(Model):
         entropy = -(action_probs * log_probs + (1 - action_probs) * log_probs_neg)
         mean_entropy = tf.reduce_mean(entropy)
 
-        policy_loss = -tf.reduce_mean(selected_log_probs * -advantages)  # minus for maximization
+        policy_loss = -tf.reduce_mean(selected_log_probs * advantages)  # minus for maximization
         loss = policy_loss + entropy_beta * mean_entropy
 
         return loss

@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 
 from .a3c_model import A3CModel
 from main import Environment as Env
+from setup import ai
 
 
 class Agent:
@@ -42,7 +43,7 @@ class Agent:
         return action
 
     @staticmethod
-    def choose_action(state, model, training=False, epsilon=0.15):
+    def choose_action(state, model, training=False, epsilon=0.19):
         state_tensor = tf.convert_to_tensor(state, dtype=tf.float32)
 
         action, value = model(state_tensor, training=training)
@@ -60,7 +61,7 @@ class Agent:
         return action.numpy(), value.numpy()
 
     @staticmethod
-    def unpack_exp_and_step(model, experiences):
+    def unpack_exp_and_step(model, experiences, epoch=0):
         states, actions, advantages, rewards, next_val = zip(*experiences)
 
         actions = np.array(actions)
@@ -74,7 +75,13 @@ class Agent:
         rewards = rewards.reshape(-1).astype(np.float32)
         next_val = next_val.reshape(-1).astype(np.float32)
 
+        if ai['DEBUG']:
+            Agent.save_exp_to_csv(actions, advantages, rewards, next_val, epoch)
+
         states = states.reshape(-1, states.shape[-2], states.shape[-1])
+
+        if ai['DEBUG']:
+            Agent.save_states_to_csv(states, epoch)
 
         # create training batches
         dim = len(experiences)
@@ -120,8 +127,9 @@ class Agent:
             next_states, rewards = env.step(actions, episode)
             _, next_values = Agent.choose_action(next_states, model, True)
 
-            target_value = np.array(rewards) + np.array(next_values) * gamma
-            advantages = target_value - np.array(values)
+            rewards = rewards.reshape((-1, 1))
+            target_value = rewards + next_values * gamma
+            advantages = target_value - values
 
             experience = (states, actions, advantages, rewards, next_values)
             experience_queue.put(experience)  # ((agent_id, experience))
@@ -131,7 +139,30 @@ class Agent:
 
         tf.keras.backend.clear_session()
 
-    # TODO work on those function
+    @staticmethod
+    def save_states_to_csv(states, epoch, output_dir='data'):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        states = states.reshape(-1, states.shape[-1])
+        exp_df = pd.DataFrame(states)
+        file = os.path.join(output_dir, f'states{epoch}.csv')
+        # save to file
+        exp_df.to_csv(file, index=False)
+
+    @staticmethod
+    def save_exp_to_csv(actions, advantages, rewards, next_val, epoch, output_dir='data'):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        exp_df = pd.DataFrame({
+            'Action': actions,
+            'Advantages': advantages,
+            'Rewards': rewards,
+            'Next Value': next_val
+        })
+        file = os.path.join(output_dir, f'exp{epoch}.csv')
+        # save to file
+        exp_df.to_csv(file, index=False)
+
     @staticmethod
     def save_losses_csv(actor_losses, critic_losses, total_losses, output_dir='data/losses'):
         if not os.path.exists(output_dir):

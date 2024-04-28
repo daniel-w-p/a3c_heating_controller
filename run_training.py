@@ -10,7 +10,7 @@ from main import Environment
 
 
 def main():
-    num_agents = 6
+    num_agents = 10
     epochs = 5
     start_from_checkpoint = True
     desired_temps = [18., 18.5, 19., 19.5, 20., 20.5]
@@ -93,7 +93,7 @@ def main():
         print(f'Max reward: {np.max(rewards)}')
 
         # Update the main model based on the experiences collected from agents.
-        actor_loss, critic_loss, total_loss = Agent.unpack_exp_and_step(main_model, experiences)
+        actor_loss, critic_loss, total_loss = Agent.unpack_exp_and_step(main_model, experiences, i)
         actor_losses.append(actor_loss)
         critic_losses.append(critic_loss)
         total_losses.append(total_loss)

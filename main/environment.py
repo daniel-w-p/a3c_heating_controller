@@ -110,6 +110,6 @@ class Environment:
         penalties = []
         for tm, rdt in zip(self.temp_model, self.rooms_desired_temp):
             penalties.append(100 - (4 * (tm.indoor_temperature - rdt))**2 - (4 * (max(0, tm.heating_temperature - tm.max_floor_temperature)))**2)  # max() - penalize only when the floor temperature exceeds the max
-        return penalties
+        return np.array(penalties)
 
 
