@@ -13,9 +13,10 @@ from setup import ai
 
 
 class Agent:
-    EXP_COUNTER = 2880  # how many experiences (actions in environment) 1440 = day
+    EXP_COUNTER = 3600  # how many experiences (actions in environment) 1440 = day
     SAVE_DIR = './saves/'
     SAVE_FILE = 'a3c_model'
+    BATCH_COUNT = 10
 
     @staticmethod
     def check_save_dir(save_dir=SAVE_DIR):
@@ -35,7 +36,7 @@ class Agent:
             print("Weights file does not exist.")
 
     @staticmethod
-    def choose_simulation_action(state, model, training=False):
+    def choose_simulation_one_action(state, model, training=False):
         state_tensor = tf.convert_to_tensor([state], dtype=tf.float32)
 
         action, _ = model(state_tensor, training=training)
@@ -43,7 +44,15 @@ class Agent:
         return action
 
     @staticmethod
-    def choose_action(state, model, training=False, epsilon=0.19):
+    def choose_simulation_all_action(state, model, training=False):
+        state_tensor = tf.convert_to_tensor(state, dtype=tf.float32)
+
+        action, _ = model(state_tensor, training=training)
+        action = tf.where(action > 0.5, 1, 0)
+        return action
+
+    @staticmethod
+    def choose_action(state, model, training=False, epsilon=0.02):
         state_tensor = tf.convert_to_tensor(state, dtype=tf.float32)
 
         action, value = model(state_tensor, training=training)
@@ -70,10 +79,10 @@ class Agent:
         next_val = np.array(next_val)
         states = np.array(states)
 
-        actions = actions.reshape(-1).astype(np.float32)
-        advantages = advantages.reshape(-1).astype(np.float32)
-        rewards = rewards.reshape(-1).astype(np.float32)
-        next_val = next_val.reshape(-1).astype(np.float32)
+        actions = actions.reshape(-1, 1).astype(np.float32)
+        advantages = advantages.reshape(-1, 1).astype(np.float32)
+        rewards = rewards.reshape(-1, 1).astype(np.float32)
+        next_val = next_val.reshape(-1, 1).astype(np.float32)
 
         if ai['DEBUG']:
             Agent.save_exp_to_csv(actions, advantages, rewards, next_val, epoch)
@@ -91,19 +100,17 @@ class Agent:
         shuffled_rewards = rewards[shuffled_indices]
         shuffled_next_val = next_val[shuffled_indices]
         shuffled_states = states[shuffled_indices]
-        split_actions = np.array_split(shuffled_actions, 10)
-        split_advantages = np.array_split(shuffled_advantages, 10)
-        split_rewards = np.array_split(shuffled_rewards, 10)
-        split_next_val = np.array_split(shuffled_next_val, 10)
-        split_states = np.array_split(shuffled_states, 10)
+        split_actions = np.array_split(shuffled_actions, Agent.BATCH_COUNT)
+        split_advantages = np.array_split(shuffled_advantages, Agent.BATCH_COUNT)
+        split_rewards = np.array_split(shuffled_rewards, Agent.BATCH_COUNT)
+        split_next_val = np.array_split(shuffled_next_val, Agent.BATCH_COUNT)
+        split_states = np.array_split(shuffled_states, Agent.BATCH_COUNT)
 
         actor_loss, critic_loss, total_loss = [], [], []
         for env_state, action, advantages, rewards, next_val in zip(split_states, split_actions, split_advantages,
                                                                     split_rewards, split_next_val):
 
-            action = tf.expand_dims(action, axis=1)
-
-            a, c, t = model.train_step(env_state, action, advantages, rewards, next_val)
+            a, c, t = model.train_step(env_state, action, advantages, rewards, next_val, epoch)
             actor_loss.append(a)
             critic_loss.append(c)
             total_loss.append(t)
@@ -124,7 +131,7 @@ class Agent:
         local_experience = []
         while episode < Agent.EXP_COUNTER:
             actions, values = Agent.choose_action(states, model, True)
-            next_states, rewards = env.step(actions, episode)
+            next_states, rewards = env.step(actions, 1)  # one (1) or rebuild environment step()
             _, next_values = Agent.choose_action(next_states, model, True)
 
             rewards = rewards.reshape((-1, 1))

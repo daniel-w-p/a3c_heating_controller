@@ -11,7 +11,7 @@ from main import Environment
 
 def main():
     num_agents = 10
-    epochs = 5
+    epochs = 7
     start_from_checkpoint = True
     desired_temps = [18., 18.5, 19., 19.5, 20., 20.5]
 
@@ -54,7 +54,7 @@ def main():
         # Prepare and run agents (multiprocessing)
         for a in range(num_agents):
             weights_queue.put(main_model_weights)
-            desired_temps = np.array(desired_temps) + 0.17
+            desired_temps = np.array(desired_temps) + 0.13
             print("Creating Agent ", a)
             agent_process = mp.Process(target=Agent.learn,
                                        args=(a, weights_queue, experience_queue, desired_temps))
@@ -98,6 +98,7 @@ def main():
         critic_losses.append(critic_loss)
         total_losses.append(total_loss)
 
+        print(f"Actual learning rate: {main_model.learning_rate} in epoch {i}")
         print(f"Losses:\n t - {total_losses} ;\n a - {actor_losses} ;\n c - {critic_losses}")
 
         if i > 0 and i % 5 == 0:  # save interval - 5 epochs

@@ -10,12 +10,14 @@ from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization
 
 
 class A3CModel(Model):
-    LEARNING_RATE = 0.000009
+    LEARNING_RATE = 0.0004
+    LEARNING_RATE_DECAY_FACTOR = 0.98
     CLIP_NORM = 25.0
 
     def __init__(self, learning_rate=LEARNING_RATE):
         super(A3CModel, self).__init__()
 
+        self.last_epoch = 0
         self.learning_rate = learning_rate
 
         # GRU Layer
@@ -24,12 +26,12 @@ class A3CModel(Model):
         # self.gru_thr = GRU(64, return_sequences=True, return_state=False)
         self.gru_out = GRU(64)
 
-        # self.mid_dense = Dense(128)
-        # self.mid_activation = LeakyReLU(alpha=0.2)
-        # self.mid_norm = BatchNormalization()
+        self.mid_dense = Dense(64)
+        self.mid_activation = LeakyReLU(alpha=0.1)
+        self.mid_norm = BatchNormalization()
 
         # Actor-Critic output
-        self.last_dense = Dense(64)
+        self.last_dense = Dense(32)
         self.last_activation = LeakyReLU(alpha=0.2)
         self.last_norm = BatchNormalization()
 
@@ -54,9 +56,11 @@ class A3CModel(Model):
         x = self.gru_two(x)
         # x = self.gru_thr(x)
         x = self.gru_out(x)
-        # x = self.mid_dense(x)
-        # x = self.mid_activation(x)
-        # x = self.mid_norm(x)
+
+        x = self.mid_dense(x)
+        x = self.mid_activation(x)
+        x = self.mid_norm(x)
+
         x = self.last_dense(x)
         x = self.last_activation(x)
         x = self.last_norm(x)
@@ -84,7 +88,8 @@ class A3CModel(Model):
         entropy = -(action_probs * log_probs + (1 - action_probs) * log_probs_neg)
         mean_entropy = tf.reduce_mean(entropy)
 
-        policy_loss = -tf.reduce_mean(selected_log_probs * advantages)  # minus for maximization
+        adv = selected_log_probs * advantages
+        policy_loss = -tf.reduce_mean(adv)  # minus for maximization
         loss = policy_loss + entropy_beta * mean_entropy
 
         return loss
@@ -93,7 +98,12 @@ class A3CModel(Model):
         return tf.keras.losses.mean_squared_error(true_values, estimated_values)
 
     @tf.function(reduce_retracing=True)
-    def train_step(self, env_state, actions, advantages, rewards, next_values, gamma=0.98):
+    def train_step(self, env_state, actions, advantages, rewards, next_values, epoch=0, gamma=0.98):
+        if epoch != self.last_epoch:
+            self.learning_rate = self.learning_rate * (self.LEARNING_RATE_DECAY_FACTOR ** epoch)
+            self.optimizer.learning_rate.assign(self.learning_rate)
+            self.last_epoch = epoch
+
         with tf.GradientTape() as tape:
             action_probs, values = self.call(env_state)
 

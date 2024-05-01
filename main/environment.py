@@ -66,7 +66,7 @@ class Environment:
             states.append((*tm.get_in_values(self.time), *tm.get_out_values(), rdt, math.sin(theta), math.cos(theta)))
         states = np.array(states)
         # duplicating a single vector into a given array size
-        self.state_series = np.tile(states[:, np.newaxis, np.newaxis, :], (1, 15, 32, 1))  # 15min * 32 = 8h
+        self.state_series = np.tile(states[:, np.newaxis, np.newaxis, :], (1, 10, 42, 1))  # 10min * 42 = 7h
         for i in range(self.rooms_num):
             actual_states.append(self.state_series[i, 0, :, :])
 
@@ -87,10 +87,10 @@ class Environment:
         actual_states = []
         for i, action in enumerate(actions):
             self.temp_model[i].step(bool(action), self.time)
-            # adding vector on last position in list and remove first one but doing this once per 15 min.
-            # that makes range of 8 hours (15min * 32 vectors in matrix)
-            new_states = np.vstack([self.state_series[i][self.time % 15][1:], self.get_state(i)])
-            self.state_series[i][self.time % 15] = new_states
+            # adding vector on last position in list and remove first one but doing this once per 10 min.
+            # that makes range of 8 hours (10min * 42 vectors in matrix)
+            new_states = np.vstack([self.state_series[i][self.time % 10][1:], self.get_state(i)])
+            self.state_series[i][self.time % 10] = new_states
             actual_states.append(new_states)
 
         return np.array(actual_states), self.get_penalty()
@@ -109,7 +109,9 @@ class Environment:
     def get_penalty(self):
         penalties = []
         for tm, rdt in zip(self.temp_model, self.rooms_desired_temp):
-            penalties.append(100 - (4 * (tm.indoor_temperature - rdt))**2 - (4 * (max(0, tm.heating_temperature - tm.max_floor_temperature)))**2)  # max() - penalize only when the floor temperature exceeds the max
+            penalties.append(100 - (4 * (tm.indoor_temperature - rdt))**2 -
+                             (4 * (max(0, tm.heating_temperature - tm.max_floor_temperature)))**2)  # - # max() - penalize only when the floor temperature exceeds the max
+                             # tm.get_switch_heating_difference(self.time)**2)
         return np.array(penalties)
 
 
