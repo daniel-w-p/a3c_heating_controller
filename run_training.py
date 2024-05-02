@@ -11,9 +11,9 @@ from main import Environment
 
 def main():
     num_agents = 10
-    epochs = 7
+    epochs = 1
     start_from_checkpoint = True
-    desired_temps = [18., 18.5, 19., 19.5, 20., 20.5]
+    desired_temps = [17., 17.5, 18., 18.5, 19., 19.5, 20., 20.5, 21., 21.5]
 
     # Dynamic GPU memory allocation for TensorFlow
     gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -34,8 +34,7 @@ def main():
     main_model.summary()
 
     if start_from_checkpoint and os.listdir(Agent.SAVE_DIR):
-        print("Loading checkpoint...")
-        main_model.load_weights(Agent.SAVE_DIR+Agent.SAVE_FILE)
+        Agent.load_model(main_model)
 
     manager = mp.Manager()
     actor_losses = []
@@ -48,7 +47,7 @@ def main():
         experience_queue = manager.Queue()
         agents = []
         main_model_weights = main_model.get_weights()
-        desired_temps = [19., 19.5, 20., 20.5, 21., 21.5]
+        desired_temps = [17., 17.5, 18., 18.5, 19., 19.5, 20., 20.5, 21., 21.5]
         experiences = []
 
         # Prepare and run agents (multiprocessing)
@@ -89,8 +88,10 @@ def main():
         # Some logs.
         print(f'Epoch {i} finished. Updating main model weights')
         rewards = [reward for _, _, _, reward, _ in experiences]
-        print(f'Mean reward: {np.mean(rewards)}')
+        print(f'Average reward: {np.mean(rewards)}')
         print(f'Max reward: {np.max(rewards)}')
+        print(f'Min reward: {np.min(rewards)}')
+        print(f'Rewards shape: {np.array(rewards).shape}')
 
         # Update the main model based on the experiences collected from agents.
         actor_loss, critic_loss, total_loss = Agent.unpack_exp_and_step(main_model, experiences, i)

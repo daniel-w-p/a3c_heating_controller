@@ -10,9 +10,9 @@ from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization
 
 
 class A3CModel(Model):
-    LEARNING_RATE = 0.0004
+    LEARNING_RATE = 0.00001
     LEARNING_RATE_DECAY_FACTOR = 0.98
-    CLIP_NORM = 25.0
+    CLIP_NORM = 50.0
 
     def __init__(self, learning_rate=LEARNING_RATE):
         super(A3CModel, self).__init__()
@@ -21,8 +21,8 @@ class A3CModel(Model):
         self.learning_rate = learning_rate
 
         # GRU Layer
-        self.gru_one = GRU(256, return_sequences=True, return_state=False)
-        self.gru_two = GRU(128, return_sequences=True, return_state=False)
+        self.gru_one = GRU(128, return_sequences=True, return_state=False)
+        self.gru_two = GRU(64, return_sequences=True, return_state=False)
         # self.gru_thr = GRU(64, return_sequences=True, return_state=False)
         self.gru_out = GRU(64)
 
@@ -88,8 +88,7 @@ class A3CModel(Model):
         entropy = -(action_probs * log_probs + (1 - action_probs) * log_probs_neg)
         mean_entropy = tf.reduce_mean(entropy)
 
-        adv = selected_log_probs * advantages
-        policy_loss = -tf.reduce_mean(adv)  # minus for maximization
+        policy_loss = -tf.reduce_mean(selected_log_probs * advantages)  # minus for maximization
         loss = policy_loss + entropy_beta * mean_entropy
 
         return loss

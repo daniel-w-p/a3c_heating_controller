@@ -109,9 +109,10 @@ class Environment:
     def get_penalty(self):
         penalties = []
         for tm, rdt in zip(self.temp_model, self.rooms_desired_temp):
+            switch_frequency_penalty = tm.get_switch_heating_difference(self.time)**2
             penalties.append(100 - (4 * (tm.indoor_temperature - rdt))**2 -
-                             (4 * (max(0, tm.heating_temperature - tm.max_floor_temperature)))**2)  # - # max() - penalize only when the floor temperature exceeds the max
-                             # tm.get_switch_heating_difference(self.time)**2)
+                             (4 * (max(0, tm.heating_temperature - tm.max_floor_temperature)))**2 -  # max() - penalize only when the floor temperature exceeds the max
+                             max(0, 10 - switch_frequency_penalty))  # max() - penalize only when the switch time is less than 10 minutes
         return np.array(penalties)
 
 

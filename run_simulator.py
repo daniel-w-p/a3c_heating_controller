@@ -29,11 +29,10 @@ def run_simulator():
 
     # only for AI
     model = None
-    state_shape = (20, 6)
     run_from_checkpoint = True
 
     # environment
-    rooms_desired_temps = [19, 20, 21, 22]
+    rooms_desired_temps = [19., 20., 21., 22.]
     if len(rooms_desired_temps) != COUNT_ROOMS:
         print('Room numbers do not match!!!!')
     env = Environment(rooms_desired_temps)
@@ -45,6 +44,10 @@ def run_simulator():
     elif ai['RUN_MODE'] == AppMode.RUN:
         print("Start app in RUN mode (A3C controller)")
         model = A3CModel()
+        # Lazy build
+        states = env.reset()
+        # here some rooms [len(desired_temps)] are treated as a bach for single room
+        model(states)
         if run_from_checkpoint:
             Agent.load_model(model)
 

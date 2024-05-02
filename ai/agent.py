@@ -13,10 +13,10 @@ from setup import ai
 
 
 class Agent:
-    EXP_COUNTER = 3600  # how many experiences (actions in environment) 1440 = day
+    EXP_COUNTER = 4000  # how many experiences (actions in environment) 1440 = day
     SAVE_DIR = './saves/'
     SAVE_FILE = 'a3c_model'
-    BATCH_COUNT = 10
+    BATCH_COUNT = 25
 
     @staticmethod
     def check_save_dir(save_dir=SAVE_DIR):
@@ -52,7 +52,7 @@ class Agent:
         return action
 
     @staticmethod
-    def choose_action(state, model, training=False, epsilon=0.02):
+    def choose_action(state, model, training=False, epsilon=0.):
         state_tensor = tf.convert_to_tensor(state, dtype=tf.float32)
 
         action, value = model(state_tensor, training=training)
@@ -93,7 +93,7 @@ class Agent:
             Agent.save_states_to_csv(states, epoch)
 
         # create training batches
-        dim = len(experiences)
+        dim = len(actions)
         shuffled_indices = np.random.permutation(dim)
         shuffled_actions = actions[shuffled_indices]
         shuffled_advantages = advantages[shuffled_indices]
@@ -160,6 +160,12 @@ class Agent:
     def save_exp_to_csv(actions, advantages, rewards, next_val, epoch, output_dir='data'):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
+
+        actions = actions.reshape(-1).astype(np.float32)
+        advantages = advantages.reshape(-1).astype(np.float32)
+        rewards = rewards.reshape(-1).astype(np.float32)
+        next_val = next_val.reshape(-1).astype(np.float32)
+
         exp_df = pd.DataFrame({
             'Action': actions,
             'Advantages': advantages,
