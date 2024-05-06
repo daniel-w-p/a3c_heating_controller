@@ -16,7 +16,7 @@ class Agent:
     EXP_COUNTER = 4000  # how many experiences (actions in environment) 1440 = day
     SAVE_DIR = './saves/'
     SAVE_FILE = 'a3c_model'
-    BATCH_COUNT = 25
+    BATCH_COUNT = 40
 
     @staticmethod
     def check_save_dir(save_dir=SAVE_DIR):
@@ -52,7 +52,7 @@ class Agent:
         return action
 
     @staticmethod
-    def choose_action(state, model, training=False, epsilon=0.):
+    def choose_action(state, model, training=False, epsilon=0.05):
         state_tensor = tf.convert_to_tensor(state, dtype=tf.float32)
 
         action, value = model(state_tensor, training=training)
@@ -118,7 +118,6 @@ class Agent:
 
     @staticmethod
     def learn(agent_id, model_weights_queue, experience_queue, desired_temps, gamma=0.98):
-        count_rooms = len(desired_temps)
         model = A3CModel()
         env = Env(desired_temps)
         states = env.reset()
@@ -128,7 +127,6 @@ class Agent:
         model.set_weights(new_weights)
 
         episode = 0
-        local_experience = []
         while episode < Agent.EXP_COUNTER:
             actions, values = Agent.choose_action(states, model, True)
             next_states, rewards = env.step(actions, 1)  # one (1) or rebuild environment step()
@@ -140,7 +138,6 @@ class Agent:
 
             experience = (states, actions, advantages, rewards, next_values)
             experience_queue.put(experience)  # ((agent_id, experience))
-            local_experience.append(experience)
             states = next_states
             episode += 1
 

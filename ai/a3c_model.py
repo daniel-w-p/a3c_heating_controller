@@ -1,18 +1,16 @@
 import os
 
-import numpy as np
-
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization
+from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization, GlobalAveragePooling1D
 
 
 class A3CModel(Model):
-    LEARNING_RATE = 0.00001
-    LEARNING_RATE_DECAY_FACTOR = 0.98
-    CLIP_NORM = 50.0
+    LEARNING_RATE = 1.0e-04
+    LEARNING_RATE_DECAY_FACTOR = 0.99
+    CLIP_NORM = 1000.0
 
     def __init__(self, learning_rate=LEARNING_RATE):
         super(A3CModel, self).__init__()
@@ -22,19 +20,21 @@ class A3CModel(Model):
 
         # GRU Layer
         self.gru_one = GRU(128, return_sequences=True, return_state=False)
-        self.gru_two = GRU(64, return_sequences=True, return_state=False)
+        self.gru_two = GRU(128, return_sequences=True, return_state=False)
         # self.gru_thr = GRU(64, return_sequences=True, return_state=False)
-        self.gru_out = GRU(64)
+        # self.gru_out = GRU(128)
 
-        self.mid_dense = Dense(64)
+        self.ga_pool = GlobalAveragePooling1D()
+
+        self.mid_dense = Dense(128)
         self.mid_activation = LeakyReLU(alpha=0.1)
         self.mid_norm = BatchNormalization()
 
-        # Actor-Critic output
-        self.last_dense = Dense(32)
+        self.last_dense = Dense(64)
         self.last_activation = LeakyReLU(alpha=0.2)
         self.last_norm = BatchNormalization()
 
+        # Actor-Critic output
         self.actor_dense = Dense(16)
         self.actor_activation = LeakyReLU(alpha=0.1)
         self.actor_norm = BatchNormalization()
@@ -55,23 +55,25 @@ class A3CModel(Model):
         x = self.gru_one(x)
         x = self.gru_two(x)
         # x = self.gru_thr(x)
-        x = self.gru_out(x)
+        # x = self.gru_out(x)
+
+        x = self.ga_pool(x)
 
         x = self.mid_dense(x)
-        x = self.mid_activation(x)
         x = self.mid_norm(x)
+        x = self.mid_activation(x)
 
         x = self.last_dense(x)
-        x = self.last_activation(x)
         x = self.last_norm(x)
+        x = self.last_activation(x)
 
         a_out = self.actor_dense(x)
-        a_out = self.actor_activation(a_out)
         a_out = self.actor_norm(a_out)
+        a_out = self.actor_activation(a_out)
 
         c_out = self.critic_dense(x)
-        c_out = self.critic_activation(c_out)
         c_out = self.critic_norm(c_out)
+        c_out = self.critic_activation(c_out)
 
         actor_output = self.actor_out(a_out)
         critic_output = self.critic_out(c_out)
@@ -108,8 +110,8 @@ class A3CModel(Model):
 
             actor_loss = self.actor_loss(advantages, actions, action_probs)
 
-            true_values = rewards + gamma * tf.squeeze(next_values)
-            critic_loss = self.critic_loss(true_values, tf.squeeze(values))
+            true_values = rewards + gamma * next_values
+            critic_loss = self.critic_loss(tf.squeeze(true_values), tf.squeeze(values))
 
             total_loss = actor_loss + critic_loss
 
