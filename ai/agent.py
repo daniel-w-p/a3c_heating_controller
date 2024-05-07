@@ -52,7 +52,7 @@ class Agent:
         return action
 
     @staticmethod
-    def choose_action(state, model, training=False, epsilon=0.05):
+    def choose_action(state, model, training=False, epsilon=0.02):
         state_tensor = tf.convert_to_tensor(state, dtype=tf.float32)
 
         action, value = model(state_tensor, training=training)

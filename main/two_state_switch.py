@@ -6,10 +6,10 @@ class TwoStateSwitch:
     """
     min_switch_time = 10
 
-    def __init__(self):
+    def __init__(self, desired_temp=22.):
         self.state = False
-        self.hysteresis = 2.
-        self.desired_temp = 22.
+        self.hysteresis = 0.5
+        self.desired_temp = desired_temp
 
     def switch(self, state):
         self.state = state

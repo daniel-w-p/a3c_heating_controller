@@ -8,9 +8,9 @@ from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization, G
 
 
 class A3CModel(Model):
-    LEARNING_RATE = 1.0e-04
-    LEARNING_RATE_DECAY_FACTOR = 0.99
-    CLIP_NORM = 1000.0
+    LEARNING_RATE = 1.0e-06
+    LEARNING_RATE_DECAY_FACTOR = 0.999
+    CLIP_NORM = 1500.0
 
     def __init__(self, learning_rate=LEARNING_RATE):
         super(A3CModel, self).__init__()

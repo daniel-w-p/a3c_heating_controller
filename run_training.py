@@ -11,7 +11,7 @@ from main import Environment
 
 def main():
     num_agents = 10
-    epochs = 30
+    epochs = 6
     start_from_checkpoint = True
     desired_temps = [17., 17.5, 18., 18.5, 19., 19.5, 20., 20.5, 21., 21.5]
 
