@@ -24,18 +24,17 @@ def run_simulator():
     pygame.init()
     screen = pygame.display.set_mode((gui['SCREEN_WIDTH'], gui['SCREEN_HEIGHT']))
     pygame.display.set_caption(gui['WINDOW_TITLE'])
-    font = pygame.font.Font(None, 24)
-    start_time = pygame.time.get_ticks()
+    font = pygame.font.Font(gui['FONT_PATH'], 18)
 
     # only for AI
     model = None
     run_from_checkpoint = True
 
     # environment
-    rooms_desired_temps = [19., 20., 21., 22.]
+    rooms_desired_temps = [20., 21., 21.5, 22.]
     if len(rooms_desired_temps) != COUNT_ROOMS:
         print('Room numbers do not match!!!!')
-    env = Environment(rooms_desired_temps)
+    env = Environment(rooms_desired_temps, False)
     simulator = Simulator(screen, font)
 
     if ai['RUN_MODE'] == AppMode.COMPARE:

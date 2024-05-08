@@ -25,7 +25,7 @@ def run_silent_mode():
     data_ai = DataDict()
     # environment
     rooms_desired_temp = 21.5
-    env_simple = Environment([rooms_desired_temp])
+    env_simple = Environment([rooms_desired_temp], False)
     env_ai = Environment([rooms_desired_temp])
 
     model_two_state = TwoStateSwitch(rooms_desired_temp)
@@ -55,11 +55,13 @@ def run_silent_mode():
     print("Temperatures: (min, mean, max)")
     indoor_temp = np.array(data_ai.data['indoor_temp'])
     print(indoor_temp.min(), indoor_temp.mean(), indoor_temp.max())
+    print("AI model standard deviation: ", np.std(data_ai.data['indoor_temp']))
 
     print("Simple two-state model data: ")
     print("Temperatures: (min, mean, max)")
     indoor_temp = np.array(data_simple.data['indoor_temp'])
     print(indoor_temp.min(), indoor_temp.mean(), indoor_temp.max())
+    print("Simple model standard deviation: ", np.std(data_simple.data['indoor_temp']))
 
 
 if __name__ == '__main__':
