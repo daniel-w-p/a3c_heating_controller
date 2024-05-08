@@ -8,15 +8,17 @@ from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization, G
 
 
 class A3CModel(Model):
-    LEARNING_RATE = 1.0e-06
-    LEARNING_RATE_DECAY_FACTOR = 0.999
-    CLIP_NORM = 1500.0
+    LEARNING_RATE = 1.0e-03
+    LEARNING_RATE_DECAY_FACTOR = 0.99
+    CLIP_NORM = 1.0
+    CLIP_NORM_RISE_FACTOR = 1.2
 
     def __init__(self, learning_rate=LEARNING_RATE):
         super(A3CModel, self).__init__()
 
         self.last_epoch = 0
         self.learning_rate = learning_rate
+        self.clip_norm = self.CLIP_NORM
 
         # GRU Layer
         self.gru_one = GRU(128, return_sequences=True, return_state=False)
@@ -103,6 +105,7 @@ class A3CModel(Model):
         if epoch != self.last_epoch:
             self.learning_rate = self.learning_rate * (self.LEARNING_RATE_DECAY_FACTOR ** epoch)
             self.optimizer.learning_rate.assign(self.learning_rate)
+            self.clip_norm = self.clip_norm * self.CLIP_NORM_RISE_FACTOR
             self.last_epoch = epoch
 
         with tf.GradientTape() as tape:
@@ -116,7 +119,7 @@ class A3CModel(Model):
             total_loss = actor_loss + critic_loss
 
         grads = tape.gradient(total_loss, self.trainable_variables)
-        grads, _ = tf.clip_by_global_norm(grads, clip_norm=self.CLIP_NORM)
+        grads, _ = tf.clip_by_global_norm(grads, clip_norm=self.clip_norm)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
 
         return actor_loss, critic_loss, total_loss

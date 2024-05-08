@@ -12,9 +12,10 @@ gui = {
     'SCREEN_HEIGHT': 750,
     'WINDOW_TITLE': 'Heating Controller',
     'FRAME_RATE': 1,
-
+    'FONT_PATH': "media/fonts/Lato-Regular.ttf"
 }
 
 ai = {
     'RUN_MODE': AppMode.RUN,
+    'DEBUG': 0,
 }

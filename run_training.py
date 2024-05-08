@@ -11,7 +11,7 @@ from main import Environment
 
 def main():
     num_agents = 10
-    epochs = 6
+    epochs = 30
     start_from_checkpoint = True
     desired_temps = [17., 17.5, 18., 18.5, 19., 19.5, 20., 20.5, 21., 21.5]
 
@@ -99,7 +99,8 @@ def main():
         critic_losses.append(critic_loss)
         total_losses.append(total_loss)
 
-        print(f"Actual learning rate: {main_model.learning_rate} in epoch {i}")
+        print(f"Actual learning rate: {main_model.learning_rate}")
+        print(f"Actual clip norm: {main_model.clip_norm}")
         print(f"Losses:\n t - {total_losses} ;\n a - {actor_losses} ;\n c - {critic_losses}")
 
         if i > 0 and i % 5 == 0:  # save interval - 5 epochs

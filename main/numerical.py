@@ -201,19 +201,3 @@ class TemperatureModel:
         """
         return (self.outdoor_temperature,)
 
-    # TODO  - for now I use simple Euler method
-    def runge_kutta_step(self, Yn, k1):
-        """
-        Runge-Kutta method for one step of temperature update.\n
-        'h' - time step is one (update every minute)\n
-        k2 = f(t+h, Yn + h*k1)\n
-        Yn+1 = Yn + 1/2 * (k1 + k2)  (h/2 = 1/2)
-
-        Args:
-            Yn (float): last (temperature) value.
-            k1 (float): first step value.
-
-        Returns:
-            float: next step value.
-        """
-        pass

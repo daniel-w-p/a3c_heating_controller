@@ -19,7 +19,7 @@ class Environment:
     T_DAY = 1440
     T_HALF_DAY = T_DAY // 2
 
-    def __init__(self, rooms_desired_temp: list, with_random=False, heating_source_temp=40., sunrise_time=460):
+    def __init__(self, rooms_desired_temp: list, with_random=True, heating_source_temp=40., sunrise_time=460):
         """
         Constructor
         Args:
@@ -27,7 +27,7 @@ class Environment:
             heating_source_temp (float): treated as constant
             sunrise_time: (int): in minutes
         """
-        random_val = np.random.uniform(-0.2, 0.2) if with_random else 0
+        random_val = np.random.uniform(-0.25, 0.25) if with_random else 0
         self.rooms_num = len(rooms_desired_temp)
         self.rooms_desired_temp = rooms_desired_temp
         self.temp_model = [TemperatureModel(rooms_desired_temp[i]+random_val, heating_source_temp, sunrise_time, True) for i in range(self.rooms_num)]
