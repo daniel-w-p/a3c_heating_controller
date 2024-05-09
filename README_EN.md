@@ -78,6 +78,20 @@ An additional module written in Pygame provides interactive visualization of the
 
 ## Project Launch
 
+The environment must be prepared, containing libraries for the technologies mentioned above, as well as a copy of the project.
+
+One of the ways:
+
+```bash
+# Get the repo
+git clone https://github.com/daniel-w-p/a3c_heating_controller.git
+
+cd a3c_heating_controller
+
+# Install requirements by pip
+pip install -r requirements.txt
+```
+
 ### Run simulation
 ```python run_simulator.py```
 

@@ -39,13 +39,13 @@ $$
 
 #### Legenda:
 
-- \( T(t) \): Temperatura wewnętrzna pomieszczenia w czasie \( t \) [°C].
-- \( H(t) \): Temperatura podłogi (czyli źródła ciepła) w czasie \( t \) [°C].
-- \( T_{\text{zew}}(t) \): Temperatura zewnętrzna w czasie \( t \) [°C].
-- \( \eta \): Współczynnik efektywności przenikania ciepła z podłogi do powietrza w pokoju [W/m²K].
-- \( k \): Współczynnik przenikania ciepła przez ściany budynku [W/m²K].
-- \( A \): Całkowita powierzchnia ścian zewnętrznych pomieszczenia [m²].
-- \( C \): Pojemność cieplna pomieszczenia, określająca ilość energii potrzebnej do podgrzania całego powietrza w pomieszczeniu o jeden stopień Celsjusza [J/K].
+- ( T(t) ): Temperatura wewnętrzna pomieszczenia w czasie ( t ) [°C].
+- ( H(t) ): Temperatura podłogi (czyli źródła ciepła) w czasie ( t ) [°C].
+- ( T_zew(t) ): Temperatura zewnętrzna w czasie ( t ) [°C].
+- ( eta ): Współczynnik efektywności przenikania ciepła z podłogi do powietrza w pokoju [W/m²K].
+- ( k ): Współczynnik przenikania ciepła przez ściany budynku [W/m²K].
+- ( A ): Całkowita powierzchnia ścian zewnętrznych pomieszczenia [m²].
+- ( C ): Pojemność cieplna pomieszczenia, określająca ilość energii potrzebnej do podgrzania całego powietrza w pomieszczeniu o jeden stopień Celsjusza [J/K].
 
 #### Wyjaśnienie równania:
 
@@ -58,11 +58,11 @@ $$
 \frac{dH}{dt} = \alpha (H_{\text{max}} - H(t)) - \beta (H(t) - T(t))
 $$
 
-gdzie:
-- \(H_{\text{max}}\) jest stałą reprezentującą maksymalną temperaturę, jaką może osiągnąć podłoga,
-- \(\alpha\) to współczynnik szybkości ogrzewania podłogi,
-- \(\beta\) to współczynnik szybkości chłodzenia podłogi,
-- \(T(t)\) to temperatura otoczenia wewnątrz budynku.
+#### Legenda:
+- ( H_max ) jest stałą reprezentującą maksymalną temperaturę, jaką może osiągnąć podłoga,
+- ( alpha ) to współczynnik szybkości ogrzewania podłogi,
+- ( beta ) to współczynnik szybkości chłodzenia podłogi,
+- ( T(t) ) to temperatura otoczenia wewnątrz budynku.
 
 
 
@@ -84,6 +84,20 @@ Dodatkowy moduł napisany w Pygame zapewnia interaktywną wizualizację pracy mo
 - Pygame
 
 ## Uruchomienie Projektu
+
+Należy przygotować środowisko zawierające biblioteki wkazanych wyżej technologi oraz kopię projektu.
+
+Jeden ze sposobów:
+
+```bash
+# Klonowanie repozytorium
+git clone https://github.com/daniel-w-p/a3c_heating_controller.git
+
+cd a3c_heating_controller
+
+# Instalacja zależności przez pip
+pip install -r requirements.txt
+```
 
 ### Uruchomienie symulacji
 ```python run_simulator.py```
