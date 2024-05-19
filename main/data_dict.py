@@ -42,13 +42,14 @@ class DataDict:
         ax1.plot(df['time'], df['outdoor_temp'], label='Outdoor')
         ax1.plot(df['time'], df['indoor_temp'], label='Indoor')
         ax1.plot(df['time'], df['heating_temp'], label='Heating')
-        ax1.set_ylabel('Temperatures')
+        ax1.set_ylabel('Temperatures [°C]')
+        ax1.set_xlabel('Time [min]')
         ax1.set_ylim(-15, 40)  # Min - Max temperature
 
         # Heating On/Off
         ax2 = ax1.twinx()  # additional OY
-        ax2.scatter(df['time'], df['heating_on'] * 49 - 12, color='red', label='On/Off', marker='o')
-        ax2.set_ylabel('Heating on')
+        ax2.scatter(df['time'], df['heating_on'] * 49 - 12, color='red', label='On/Off', marker='.')
+        ax2.set_ylabel('[off]  Heating  [on]')
         ax2.set_ylim(-15, 40)  # same as Min - Max temperature
 
         fig.legend(loc='upper right', bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes)

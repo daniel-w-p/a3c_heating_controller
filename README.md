@@ -5,6 +5,9 @@
 - [English](README_EN.md)
 - [Polski](README.md)
 
+### Bogatsza wersja dokumentacji (pdf)
+[Dokumentacja (wersja 1.0.0)](doc/doc_pl_v1.pdf)
+
 ## Opis
 
 Projekt ma na celu stworzenie modelu AI do systemu zarządzania temperaturą w budynku z wykorzystaniem technik uczenia maszynowego, a konkretnie modelu A3C (Asynchronous Advantage Actor-Critic). System ma za zadanie automatycznie regulować ogrzewanie, aby utrzymać optymalną temperaturę określoną przez użytkownika, jednocześnie minimalizując częstość przełączania ogrzewania i odchylenie od zadanej temperatury. Projekt umożliwia symulowanie wymiany ciepła między budynkiem a otoczeniem, ale wierne odzwierciedlenie fizyki tego procesu NIE jest (na razie) przedmiotem tego projektu. 
@@ -13,12 +16,12 @@ Dla celów porównawczych powstał prosty model dwustanowy, który włącza ogrz
 
 ### Co udało się osiągnąć
 
-Wyszkolony model przełącza ogrzewanie pomiędzy stanem włączonym / wyłączonym (np. zawór dwu-stanowy). Model umożliwia analizę sytuacji (stanu) dla **dowolnej** liczby pomieszczeń o zbliżonej charkterystyce i określeniu najlepszej akcji (włącz / wyłącz). Model operuje na danych zebranych z 7 godzin w 10-minutowych odstępach (42 wektory). Dane te są traktowane jako aktualny stan zgodnie z procesem decyzyjnym Markova. (To podejście ma niewielki skutek uboczny: przez pierwsze 7 godzin model operuje na niepełnych danych, jednak nie powoduje to znaczącego obniżenia jakości predykcji)
+Wyszkolony model przełącza ogrzewanie pomiędzy stanem włączonym / wyłączonym (np. zawór dwu-stanowy). Model umożliwia analizę sytuacji (stanu) dla **dowolnej** liczby pomieszczeń o zbliżonej charakterystyce i określeniu najlepszej akcji (włącz / wyłącz). Model operuje na danych zebranych z 7 godzin w 10-minutowych odstępach (42 wektory). Dane te są traktowane jako aktualny stan zgodnie z procesem decyzyjnym Markova. (To podejście ma niewielki skutek uboczny: przez pierwsze 7 godzin model operuje na niepełnych danych, jednak nie powoduje to znaczącego obniżenia jakości predykcji).
 
 ### Co można zrobić
 
 - Dopracować symulator, żeby lepiej odzwierciedlał rzeczywistość (wymiana ciepła, otwarte okna, nagłe zmiany pogody)
-- Spróbować zmniejszyć model, lub zwiększyć jego dokładność.
+- Spróbować zmniejszyć model lub zwiększyć jego dokładność.
 - Przeszkolić model, który będzie regulował ogrzewanie w sposób płynny (procent otwarcia: 0-100%)
 
 ## Komponenty
@@ -27,14 +30,14 @@ Projekt składa się z kilku kluczowych komponentów:
 
 ### Moduł Symulacji Środowiska
 
-Moduł ten, oparty na równaniach różniczkowych, symuluje dynamikę temperatury w budynku. Dane o temperaturach i stanie ogrzewania są przekazywane do środowiska pracy modelu, symulatora lub cichego trybu. Ten ostatni zapisuje dane do pliku oraz generuje wykres.
+Moduł ten, oparty na równaniach różniczkowych symuluje dynamikę temperatury w budynku. Dane o temperaturach i stanie ogrzewania są przekazywane do środowiska pracy modelu, symulatora lub cichego trybu. Ten ostatni zapisuje dane do pliku oraz generuje wykres.
 
 ### Równania różniczkowe modelu
 
 Równanie opisujące zmianę temperatury w pomieszczeniu w czasie jest zdefiniowane jako:
 
 $$
-\frac{dT}{dt} = \frac{1}{C} \left(\eta \cdot (H(t) - T(t)) - k \cdot A \cdot (T(t) - T_{\text{zew}}(t))\right) 
+\frac{dT}{dt} = \frac{1}{C} \left(\eta \cdot A_{\text{F}} \cdot (H(t) - T(t)) - k \cdot A_{\text{W}} \cdot (T(t) - T_{\text{zew}}(t))\right) 
 $$
 
 #### Legenda:
@@ -44,7 +47,8 @@ $$
 - ( T_zew(t) ): Temperatura zewnętrzna w czasie ( t ) [°C].
 - ( eta ): Współczynnik efektywności przenikania ciepła z podłogi do powietrza w pokoju [W/m²K].
 - ( k ): Współczynnik przenikania ciepła przez ściany budynku [W/m²K].
-- ( A ): Całkowita powierzchnia ścian zewnętrznych pomieszczenia [m²].
+- ( A_w ): Całkowita powierzchnia ścian zewnętrznych pomieszczenia [m²].
+- ( A_f ): Powierzchnia podłogi w pomieszczeniu [m²].
 - ( C ): Pojemność cieplna pomieszczenia, określająca ilość energii potrzebnej do podgrzania całego powietrza w pomieszczeniu o jeden stopień Celsjusza [J/K].
 
 #### Wyjaśnienie równania:

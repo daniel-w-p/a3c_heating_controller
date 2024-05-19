@@ -31,17 +31,18 @@ This module, based on differential equations, simulates the temperature dynamics
 The equation describing the change in indoor temperature over time is defined as:
 
 $$
-\frac{dT}{dt} = \frac{1}{C} \left(\eta \cdot (H(t) - T(t)) - k \cdot A \cdot (T(t) - T_{\text{ext}}(t))\right)
+\frac{dT}{dt} = \frac{1}{C} \left(\eta \cdot A_{\text{f}} \cdot (H(t) - T(t)) - k \cdot A_{\text{w}} \cdot (T(t) - T_{\text{zew}}(t))\right) 
 $$
 
 ### Legend:
 
 - \( T(t) \): Indoor temperature of the room at time \( t \) [°C].
 - \( H(t) \): Temperature of the floor (i.e., the heat source) at time \( t \) [°C].
-- \( T_{\text{ext}}(t) \): Outdoor temperature at time \( t \) [°C].
+- \( T_ext(t) \): Outdoor temperature at time \( t \) [°C].
 - \( \eta \): Efficiency coefficient of heat transfer from the floor to the room air [W/m²K].
 - \( k \): Heat transfer coefficient through the building's walls [W/m²K].
-- \( A \): Total surface area of the room's exterior walls [m²].
+- \( A_w \): Total surface area of the room's exterior walls [m²].
+- \( A_f \): Surface area of the room's floor [m²].
 - \( C \): Thermal capacity of the room, indicating the amount of energy needed to warm up the entire room air by one degree Celsius [J/K].
 
 ### Explanation of the Equation:

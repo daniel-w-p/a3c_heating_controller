@@ -3,8 +3,6 @@ import math
 import numpy as np
 
 from .data_dict import DataDict
-# TODO : remember to penalizing to often heating switching and floor heating over desired max temp
-# TODO : simulation coefficients still needs to be checked and improved
 
 
 class TemperatureModel:
@@ -32,15 +30,15 @@ class TemperatureModel:
         calculate_heating_temperature: numerical approximation for all temperatures based on given time.
     """
     min_switch_time = 10
-    max_floor_temperature = 27.
+    max_floor_temperature = 28.
     min_out_temperature = -10.
     min_max_temp_distance = 11.
 
-    alpha = 0.0006
-    beta = 0.0012
-    # room size: 4 * 4 * 2.6 # there are always two outside walls 2 * 4 * 2.6 = 20.8
-    k_coef = 20.8 * 0.5 / 50000  # TODO IMPROVE this should depend on the size of the room
-    mu_coef = 2.7 / 50000  # TODO IMPROVE this should depend on the size of the room
+    alpha = 0.0025
+    beta = 0.005
+    # room size: 4 * 4 * 2.6 # there are always two outside walls 2 * 4 * 2.6 = 20.8 ; floor area: 4 * 4 = 16m2
+    k_coef = 20.8 * 0.8 * 60 / 651000  # TODO IMPROVE this should depend on the size of the room
+    mu_coef = 16 * 8.45 * 60 / 651000  # TODO IMPROVE this should depend on the size of the room
 
     def __init__(self, starting_indoor_temp=20, heating_source_temp=40., sunrise_time=460, sub_minute_for_day=True):
         """
@@ -106,7 +104,7 @@ class TemperatureModel:
         Returns:
             float: heating effect.
         """
-        return (self.heating_temperature * self.mu_coef) * (self.heating_temperature - self.indoor_temperature)
+        return self.mu_coef * (self.heating_temperature - self.indoor_temperature)
 
     def calculate_indoor_temperature(self, time: int):
         """
@@ -155,9 +153,6 @@ class TemperatureModel:
         """
         self.calculate_indoor_temperature(time)
         self.calculate_heating_temperature()
-
-        # TODO think about this
-        # self.save_values_to_dict(time)
 
     def step(self, action: bool, time: int):
         """

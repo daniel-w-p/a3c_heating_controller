@@ -7,7 +7,7 @@ from ai import A3CModel, Agent
 
 
 COUNT_ROOMS = 1
-TIME_STEPS = 2880  # one and half day
+TIME_STEPS = 2160  # one day = 1440
 
 
 def make_step(model, env, state, ai_model=False):

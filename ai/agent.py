@@ -107,10 +107,25 @@ class Agent:
         split_states = np.array_split(shuffled_states, Agent.BATCH_COUNT)
 
         actor_loss, critic_loss, total_loss = [], [], []
-        for env_state, action, advantages, rewards, next_val in zip(split_states, split_actions, split_advantages,
+        for env_state, actions, advantages, rewards, next_val in zip(split_states, split_actions, split_advantages,
                                                                     split_rewards, split_next_val):
+            # ##################################
+            # action_probs, values = model.call(env_state)
+            # action_probs = tf.clip_by_value(action_probs, 1e-8, 1 - 1e-8)
+            #
+            # log_probs = tf.math.log(action_probs)
+            # log_probs_neg = tf.math.log(1 - action_probs)
+            #
+            # selected_log_probs = actions * log_probs + (1 - actions) * log_probs_neg
+            #
+            # entropy = -(action_probs * log_probs + (1 - action_probs) * log_probs_neg)
+            # mean_entropy = tf.reduce_mean(entropy)
+            #
+            # policy_loss = -tf.reduce_mean(selected_log_probs * advantages)  # minus for maximization
+            # loss = policy_loss + 0.98 * mean_entropy
+            # ###################################
 
-            a, c, t = model.train_step(env_state, action, advantages, rewards, next_val, epoch)
+            a, c, t = model.train_step(env_state, actions, advantages, rewards, next_val, epoch)
             actor_loss.append(a)
             critic_loss.append(c)
             total_loss.append(t)

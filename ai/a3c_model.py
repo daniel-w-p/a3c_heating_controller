@@ -8,10 +8,10 @@ from tensorflow.keras.layers import Dense, GRU, LeakyReLU, BatchNormalization, G
 
 
 class A3CModel(Model):
-    LEARNING_RATE = 1.0e-03
+    LEARNING_RATE = 5.0e-04
     LEARNING_RATE_DECAY_FACTOR = 0.99
     CLIP_NORM = 1.0
-    CLIP_NORM_RISE_FACTOR = 1.2
+    CLIP_NORM_RISE_FACTOR = 1.1
 
     def __init__(self, learning_rate=LEARNING_RATE):
         super(A3CModel, self).__init__()
@@ -92,6 +92,17 @@ class A3CModel(Model):
         entropy = -(action_probs * log_probs + (1 - action_probs) * log_probs_neg)
         mean_entropy = tf.reduce_mean(entropy)
 
+        #### TEST BOTH WERSION #####
+        # Both got pros and cons
+
+        # mean_advantages, variance_advantages = tf.nn.moments(selected_log_probs * advantages, axes=[0])
+        # std_advantages = tf.sqrt(variance_advantages)
+        #
+        # policy_loss = tf.abs(mean_advantages) + std_advantages  # minus for maximization
+        # loss = policy_loss + entropy_beta * mean_entropy
+
+        #############################
+
         policy_loss = -tf.reduce_mean(selected_log_probs * advantages)  # minus for maximization
         loss = policy_loss + entropy_beta * mean_entropy
 
@@ -116,7 +127,7 @@ class A3CModel(Model):
             true_values = rewards + gamma * next_values
             critic_loss = self.critic_loss(tf.squeeze(true_values), tf.squeeze(values))
 
-            total_loss = actor_loss + critic_loss
+            total_loss = tf.abs(actor_loss) + tf.abs(critic_loss)
 
         grads = tape.gradient(total_loss, self.trainable_variables)
         grads, _ = tf.clip_by_global_norm(grads, clip_norm=self.clip_norm)

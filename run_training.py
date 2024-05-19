@@ -13,7 +13,8 @@ def main():
     num_agents = 10
     epochs = 30
     start_from_checkpoint = True
-    desired_temps = [17., 17.5, 18., 18.5, 19., 19.5, 20., 20.5, 21., 21.5]
+
+    desired_temps = [18.5, 18.7, 18.9, 19.2, 19.6, 19.9, 20.4, 20.8, 21.2, 21.5]
 
     # Dynamic GPU memory allocation for TensorFlow
     gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -47,13 +48,13 @@ def main():
         experience_queue = manager.Queue()
         agents = []
         main_model_weights = main_model.get_weights()
-        desired_temps = [17., 17.5, 18., 18.5, 19., 19.5, 20., 20.5, 21., 21.5]
+        desired_temps = [18.5, 18.7, 18.9, 19.2, 19.6, 19.9, 20.4, 20.8, 21.2, 21.5]
         experiences = []
 
         # Prepare and run agents (multiprocessing)
         for a in range(num_agents):
             weights_queue.put(main_model_weights)
-            desired_temps = np.array(desired_temps) + 0.13
+            desired_temps = np.array(desired_temps) + 0.11
             print("Creating Agent ", a)
             agent_process = mp.Process(target=Agent.learn,
                                        args=(a, weights_queue, experience_queue, desired_temps))
@@ -116,7 +117,6 @@ def main():
 
 
 if __name__ == "__main__":
-    print("This module is not fully implemented yet")
     mp.set_start_method('spawn')
 
     Agent.check_save_dir()
